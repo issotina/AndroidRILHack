@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">RIL2</string>
+    <string name="sim_added_message" />
+    <string name="sim_removed_message" />
+    <string name="sim_restart_button" />
+    <string name="launchBrowserDefault" />
+    <string name="sending" />
+    <string name="SetupCallDefault" />
+    <string name="sms_short_code_confirm_allow" />
+    <string name="sms_short_code_confirm_deny" />
+    <string name="sms_short_code_remember_undo_instruction" />
+    <string name="sms_short_code_confirm_never_allow" />
+    <string name="sms_short_code_confirm_always_allow" />
+    <string name="sms_short_code_confirm_message" />
+</resources>

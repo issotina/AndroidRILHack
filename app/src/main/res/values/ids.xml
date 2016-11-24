@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="sms_short_code_remember_choice_checkbox" type="id" />
+    <item name="sms_short_code_detail_message" type="id" />
+    <item name="sms_short_code_detail_layout" type="id" />
+    <item name="sms_short_code_confirm_message" type="id" />
+    <item name="sms_short_code_remember_undo_instruction" type="id" />
+</resources>
