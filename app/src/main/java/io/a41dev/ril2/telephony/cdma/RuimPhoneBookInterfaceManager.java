@@ -16,13 +16,13 @@
 
 package io.a41dev.ril2.telephony.cdma;
 
+import android.os.Message;
+import android.util.Log;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import android.os.Message;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.IccPhoneBookInterfaceManager;
-import com.android.internal.telephony.uicc.IccFileHandler;
+import io.a41dev.ril2.telephony.IccPhoneBookInterfaceManager;
+import io.a41dev.ril2.telephony.uicc.IccFileHandler;
 
 /**
  * RuimPhoneBookInterfaceManager to provide an inter-process communication to
@@ -48,9 +48,9 @@ public class RuimPhoneBookInterfaceManager extends IccPhoneBookInterfaceManager 
         try {
             super.finalize();
         } catch (Throwable throwable) {
-            Rlog.e(LOG_TAG, "Error while finalizing:", throwable);
+            Log.e(LOG_TAG, "Error while finalizing:", throwable);
         }
-        if(DBG) Rlog.d(LOG_TAG, "RuimPhoneBookInterfaceManager finalized");
+        if(DBG) Log.d(LOG_TAG, "RuimPhoneBookInterfaceManager finalized");
     }
 
     @Override
@@ -77,12 +77,12 @@ public class RuimPhoneBookInterfaceManager extends IccPhoneBookInterfaceManager 
 
     @Override
     protected void logd(String msg) {
-        Rlog.d(LOG_TAG, "[RuimPbInterfaceManager] " + msg);
+        Log.d(LOG_TAG, "[RuimPbInterfaceManager] " + msg);
     }
 
     @Override
     protected void loge(String msg) {
-        Rlog.e(LOG_TAG, "[RuimPbInterfaceManager] " + msg);
+        Log.e(LOG_TAG, "[RuimPbInterfaceManager] " + msg);
     }
 }
 

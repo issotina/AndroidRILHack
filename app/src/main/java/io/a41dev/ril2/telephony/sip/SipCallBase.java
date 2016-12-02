@@ -16,10 +16,12 @@
 
 package io.a41dev.ril2.telephony.sip;
 
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.Connection;
+
 import java.util.Iterator;
 import java.util.List;
+
+import io.a41dev.ril2.telephony.Call;
+import io.a41dev.ril2.telephony.Connection;
 
 abstract class SipCallBase extends Call {
 

@@ -20,32 +20,26 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
-import android.os.AsyncResult;
 import android.os.Message;
-import android.provider.Telephony.Sms;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.GsmAlphabet;
-import com.android.internal.telephony.ImsSMSDispatcher;
-import com.android.internal.telephony.InboundSmsHandler;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.SMSDispatcher;
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsHeader;
-import com.android.internal.telephony.SmsStorageMonitor;
-import com.android.internal.telephony.SmsUsageMonitor;
-import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.uicc.IccRecords;
-import com.android.internal.telephony.uicc.IccUtils;
-import com.android.internal.telephony.uicc.UiccCardApplication;
-import com.android.internal.telephony.uicc.UiccController;
-import com.android.internal.telephony.uicc.UsimServiceTable;
-import com.android.internal.telephony.gsm.GsmInboundSmsHandler;
+import android.util.Log;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
+
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.GsmAlphabet;
+import io.a41dev.ril2.telephony.ImsSMSDispatcher;
+import io.a41dev.ril2.telephony.InboundSmsHandler;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.SMSDispatcher;
+import io.a41dev.ril2.telephony.SmsConstants;
+import io.a41dev.ril2.telephony.SmsHeader;
+import io.a41dev.ril2.telephony.SmsUsageMonitor;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.uicc.IccRecords;
+import io.a41dev.ril2.telephony.uicc.IccUtils;
+import io.a41dev.ril2.telephony.uicc.UiccCardApplication;
+import io.a41dev.ril2.telephony.uicc.UiccController;
 
 public final class GsmSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "GsmSMSDispatcher";
@@ -67,7 +61,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         mGsmInboundSmsHandler = gsmInboundSmsHandler;
         mUiccController = UiccController.getInstance();
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
-        Rlog.d(TAG, "GsmSMSDispatcher created");
+        Log.d(TAG, "GsmSMSDispatcher created");
     }
 
     @Override
@@ -127,7 +121,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 SmsTracker tracker = deliveryPendingList.get(i);
                 if (tracker.mMessageRef == messageRef) {
                     // Found it.  Remove from list and broadcast.
-                    if(tpStatus >= Sms.STATUS_FAILED || tpStatus < Sms.STATUS_PENDING ) {
+                    if(tpStatus >= Telephony.Sms.STATUS_FAILED || tpStatus < Telephony.Sms.STATUS_PENDING ) {
                        deliveryPendingList.remove(i);
                        // Update the message status (COMPLETE or FAILED)
                        tracker.updateSentMessageStatus(mContext, tpStatus);
@@ -145,7 +139,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 }
             }
         }
-        mCi.acknowledgeLastIncomingGsmSms(true, Intents.RESULT_SMS_HANDLED, null);
+        mCi.acknowledgeLastIncomingGsmSms(true, Telephony.Sms.Intents.RESULT_SMS_HANDLED, null);
     }
 
     /** {@inheritDoc} */
@@ -160,7 +154,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                     getFormat());
             sendRawPdu(tracker);
         } else {
-            Rlog.e(TAG, "GsmSMSDispatcher.sendData(): getSubmitPdu() returned null");
+            Log.e(TAG, "GsmSMSDispatcher.sendData(): getSubmitPdu() returned null");
         }
     }
 
@@ -176,7 +170,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                     getFormat());
             sendRawPdu(tracker);
         } else {
-            Rlog.e(TAG, "GsmSMSDispatcher.sendText(): getSubmitPdu() returned null");
+            Log.e(TAG, "GsmSMSDispatcher.sendText(): getSubmitPdu() returned null");
         }
     }
 
@@ -202,7 +196,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                     deliveryIntent, getFormat());
             sendRawPdu(tracker);
         } else {
-            Rlog.e(TAG, "GsmSMSDispatcher.sendNewSubmitPdu(): getSubmitPdu() returned null");
+            Log.e(TAG, "GsmSMSDispatcher.sendNewSubmitPdu(): getSubmitPdu() returned null");
         }
     }
 
@@ -217,7 +211,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         Message reply = obtainMessage(EVENT_SEND_SMS_COMPLETE, tracker);
 
         if (tracker.mRetryCount > 0) {
-            Rlog.d(TAG, "sendSms: "
+            Log.d(TAG, "sendSms: "
                     + " mRetryCount=" + tracker.mRetryCount
                     + " mMessageRef=" + tracker.mMessageRef
                     + " SS=" + mPhone.getServiceState().getState());
@@ -230,7 +224,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 pdu[1] = (byte) tracker.mMessageRef; // TP-MR
             }
         }
-        Rlog.d(TAG, "sendSms: "
+        Log.d(TAG, "sendSms: "
                 +" isIms()="+isIms()
                 +" mRetryCount="+tracker.mRetryCount
                 +" mImsRetry="+tracker.mImsRetry
@@ -277,7 +271,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         UiccCardApplication app = mUiccApplication.get();
         if (app != newUiccApplication) {
             if (app != null) {
-                Rlog.d(TAG, "Removing stale icc objects.");
+                Log.d(TAG, "Removing stale icc objects.");
                 if (mIccRecords.get() != null) {
                     mIccRecords.get().unregisterForNewSms(this);
                 }
@@ -285,7 +279,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 mUiccApplication.set(null);
             }
             if (newUiccApplication != null) {
-                Rlog.d(TAG, "New Uicc application found");
+                Log.d(TAG, "New Uicc application found");
                 mUiccApplication.set(newUiccApplication);
                 mIccRecords.set(newUiccApplication.getIccRecords());
                 if (mIccRecords.get() != null) {

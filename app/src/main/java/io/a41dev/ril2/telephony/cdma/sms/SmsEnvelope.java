@@ -17,8 +17,6 @@
 package io.a41dev.ril2.telephony.cdma.sms;
 
 
-import com.android.internal.telephony.cdma.sms.CdmaSmsSubaddress;
-
 public final class SmsEnvelope {
     /**
      * Message Types

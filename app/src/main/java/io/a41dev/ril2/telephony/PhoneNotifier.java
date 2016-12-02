@@ -16,7 +16,6 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.telephony.CellInfo;
 
 import java.util.List;
 

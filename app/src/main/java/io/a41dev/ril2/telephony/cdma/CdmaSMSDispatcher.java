@@ -21,22 +21,22 @@ import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
 import android.content.Intent;
 import android.os.Message;
-import android.os.SystemProperties;
-import android.provider.Telephony.Sms;
-import android.telephony.Rlog;
 import android.telephony.SmsManager;
-
-import com.android.internal.telephony.GsmAlphabet;
-import com.android.internal.telephony.ImsSMSDispatcher;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.SMSDispatcher;
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsHeader;
-import com.android.internal.telephony.SmsUsageMonitor;
-import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.cdma.sms.UserData;
+import android.util.Log;
 
 import java.util.HashMap;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.TelephonyProperties;
+import io.a41dev.ril2.telephony.GsmAlphabet;
+import io.a41dev.ril2.telephony.ImsSMSDispatcher;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.SMSDispatcher;
+import io.a41dev.ril2.telephony.SmsConstants;
+import io.a41dev.ril2.telephony.SmsHeader;
+import io.a41dev.ril2.telephony.SmsUsageMonitor;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.cdma.sms.UserData;
 
 public class CdmaSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "CdmaSMSDispatcher";
@@ -45,7 +45,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
     public CdmaSMSDispatcher(PhoneBase phone, SmsUsageMonitor usageMonitor,
             ImsSMSDispatcher imsSMSDispatcher) {
         super(phone, usageMonitor, imsSMSDispatcher);
-        Rlog.d(TAG, "CdmaSMSDispatcher created");
+        Log.d(TAG, "CdmaSMSDispatcher created");
     }
 
     @Override
@@ -58,17 +58,17 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
      * @param sms the CDMA SMS message containing the status report
      */
     void sendStatusReportMessage(SmsMessage sms) {
-        if (VDBG) Rlog.d(TAG, "sending EVENT_HANDLE_STATUS_REPORT message");
+        if (VDBG) Log.d(TAG, "sending EVENT_HANDLE_STATUS_REPORT message");
         sendMessage(obtainMessage(EVENT_HANDLE_STATUS_REPORT, sms));
     }
 
     @Override
     protected void handleStatusReport(Object o) {
         if (o instanceof SmsMessage) {
-            if (VDBG) Rlog.d(TAG, "calling handleCdmaStatusReport()");
+            if (VDBG) Log.d(TAG, "calling handleCdmaStatusReport()");
             handleCdmaStatusReport((SmsMessage) o);
         } else {
-            Rlog.e(TAG, "handleStatusReport() called for object type " + o.getClass().getName());
+            Log.e(TAG, "handleStatusReport() called for object type " + o.getClass().getName());
         }
     }
 
@@ -83,7 +83,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
                 // Found it.  Remove from list and broadcast.
                 deliveryPendingList.remove(i);
                 // Update the message status (COMPLETE)
-                tracker.updateSentMessageStatus(mContext, Sms.STATUS_COMPLETE);
+                tracker.updateSentMessageStatus(mContext, Telephony.Sms.STATUS_COMPLETE);
 
                 PendingIntent intent = tracker.mDeliveryIntent;
                 Intent fillIn = new Intent();
@@ -165,7 +165,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
                 } catch (CanceledException ex) {}
             }
             if (VDBG) {
-                Rlog.d(TAG, "Block SMS in Emergency Callback mode");
+                Log.d(TAG, "Block SMS in Emergency Callback mode");
             }
             return;
         }
@@ -182,7 +182,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
 
         Message reply = obtainMessage(EVENT_SEND_SMS_COMPLETE, tracker);
 
-        Rlog.d(TAG, "sendSms: "
+        Log.d(TAG, "sendSms: "
                 +" isIms()="+isIms()
                 +" mRetryCount="+tracker.mRetryCount
                 +" mImsRetry="+tracker.mImsRetry

@@ -16,15 +16,15 @@
 
 package io.a41dev.ril2.telephony.sip;
 
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.Connection;
-import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.UUSInfo;
-
 import android.os.SystemClock;
-import android.telephony.Rlog;
 import android.telephony.PhoneNumberUtils;
+import android.util.Log;
+
+import io.a41dev.ril2.telephony.Call;
+import io.a41dev.ril2.telephony.Connection;
+import io.a41dev.ril2.telephony.Phone;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.UUSInfo;
 
 abstract class SipConnectionBase extends Connection {
     private static final String LOG_TAG = "SipConnBase";
@@ -129,7 +129,7 @@ abstract class SipConnectionBase extends Connection {
     }
 
     @Override
-    public DisconnectCause getDisconnectCause() {
+    public Connection.DisconnectCause getDisconnectCause() {
         if (VDBG) log("getDisconnectCause: ret=" + mCause);
         return mCause;
     }
@@ -176,7 +176,7 @@ abstract class SipConnectionBase extends Connection {
     }
 
     private void log(String msg) {
-        Rlog.d(LOG_TAG, msg);
+        Log.d(LOG_TAG, msg);
     }
 
     @Override

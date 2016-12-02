@@ -14,7 +14,7 @@
 ** limitations under the License.
 */
 
-package com.android.internal.telephony.uicc;
+package io.a41dev.ril2.telephony.uicc;
 
 parcelable AdnRecord;
 

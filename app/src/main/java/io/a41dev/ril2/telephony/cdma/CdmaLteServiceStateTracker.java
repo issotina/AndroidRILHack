@@ -16,37 +16,10 @@
 
 package io.a41dev.ril2.telephony.cdma;
 
-import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.MccTable;
-import com.android.internal.telephony.EventLogTags;
-import com.android.internal.telephony.uicc.RuimRecords;
-import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
+public class CdmaLteServiceStateTracker /*extends CdmaServiceStateTracker */{
+/*    private CDMALTEPhone mCdmaLtePhone;
 
-import android.telephony.CellInfo;
-import android.telephony.CellInfoLte;
-import android.telephony.CellSignalStrengthLte;
-import android.telephony.CellIdentityLte;
-import android.telephony.SignalStrength;
-import android.telephony.ServiceState;
-import android.telephony.cdma.CdmaCellLocation;
-import android.text.TextUtils;
-import android.os.AsyncResult;
-import android.os.Message;
-import android.os.SystemClock;
-import android.os.SystemProperties;
-
-import android.telephony.Rlog;
-import android.util.EventLog;
-
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-
-public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
-    private CDMALTEPhone mCdmaLtePhone;
     private final CellInfoLte mCellInfoLte;
-
     private CellIdentityLte mNewCellIdentityLte = new CellIdentityLte();
     private CellIdentityLte mLasteCellIdentityLte = new CellIdentityLte();
 
@@ -100,9 +73,9 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         }
     }
 
-    /**
+    *//**
      * Handle the result of one of the pollState()-related requests
-     */
+     *//*
     @Override
     protected void handlePollStateResultMessage(int what, AsyncResult ar) {
         if (what == EVENT_POLL_STATE_GPRS) {
@@ -521,12 +494,12 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         return mSS.getCssIndicator() == 1;
     }
 
-    /**
+    *//**
      * Check whether the specified SID and NID pair appears in the HOME SID/NID list
      * read from NV or SIM.
      *
      * @return true if provided sid/nid pair belongs to operator's home network.
-     */
+     *//*
     private boolean isInHomeSidNid(int sid, int nid) {
         // if SID/NID is not available, assume this is home network.
         if (isSidsAllZeros()) return true;
@@ -549,11 +522,11 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         return false;
     }
 
-    /**
+    *//**
      * TODO: Remove when we get new ril/modem for Galaxy Nexus.
      *
      * @return all available cell information, the returned List maybe empty but never null.
-     */
+     *//*
     @Override
     public List<CellInfo> getAllCellInfo() {
         if (mCi.getRilVersion() >= 8) {
@@ -571,12 +544,12 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
 
     @Override
     protected void log(String s) {
-        Rlog.d(LOG_TAG, "[CdmaLteSST] " + s);
+        Log.d(LOG_TAG, "[CdmaLteSST] " + s);
     }
 
     @Override
     protected void loge(String s) {
-        Rlog.e(LOG_TAG, "[CdmaLteSST] " + s);
+        Log.e(LOG_TAG, "[CdmaLteSST] " + s);
     }
 
     @Override
@@ -584,5 +557,5 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         pw.println("CdmaLteServiceStateTracker extends:");
         super.dump(fd, pw, args);
         pw.println(" mCdmaLtePhone=" + mCdmaLtePhone);
-    }
+    }*/
 }

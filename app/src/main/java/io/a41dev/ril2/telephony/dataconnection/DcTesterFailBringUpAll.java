@@ -22,14 +22,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
-import android.telephony.Rlog;
+import android.util.Log;
 
-import com.android.internal.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.PhoneBase;
 
 /**
  * A package level call that causes all DataConnection bringUp calls to fail a specific
  * number of times. Here is an example that sets counter to 2 and cause to -3 for all instances:
- *    adb shell am broadcast -a com.android.internal.telephony.dataconnection.action_fail_bringup \
+ *    adb shell am broadcast -a io.a41dev.ril2.telephony.dataconnection.action_fail_bringup \
  *     --ei counter 2 --ei fail_cause -3
  *
  * Also you can add a suggested retry time if desired:
@@ -76,7 +76,7 @@ public class DcTesterFailBringUpAll {
 
     DcTesterFailBringUpAll(PhoneBase phone, Handler handler) {
         mPhone = phone;
-        if (Build.IS_DEBUGGABLE) {
+        if (true) {
             IntentFilter filter = new IntentFilter();
 
             filter.addAction(mActionFailBringUp);
@@ -93,7 +93,7 @@ public class DcTesterFailBringUpAll {
     }
 
     void dispose() {
-        if (Build.IS_DEBUGGABLE) {
+        if (true) {
             mPhone.getContext().unregisterReceiver(mIntentReceiver);
         }
     }
@@ -103,6 +103,6 @@ public class DcTesterFailBringUpAll {
     }
 
     private void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 }

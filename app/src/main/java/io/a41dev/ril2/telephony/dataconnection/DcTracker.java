@@ -24,51 +24,39 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
-import android.net.LinkCapabilities;
-import android.net.LinkProperties;
-import android.net.NetworkConfig;
-import android.net.NetworkUtils;
-import android.net.ProxyProperties;
 import android.net.Uri;
-import android.os.AsyncResult;
-import android.os.Build;
 import android.os.Message;
-import android.os.Messenger;
 import android.os.SystemClock;
-import android.os.SystemProperties;
-import android.os.UserHandle;
 import android.provider.Settings;
-import android.provider.Telephony;
 import android.telephony.CellLocation;
-import android.telephony.ServiceState;
-import android.telephony.TelephonyManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.telephony.gsm.GsmCellLocation;
 import android.text.TextUtils;
-import android.util.EventLog;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.DctConstants;
-import com.android.internal.telephony.EventLogTags;
-import com.android.internal.telephony.TelephonyIntents;
-import com.android.internal.telephony.gsm.GSMPhone;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.RILConstants;
-import com.android.internal.telephony.uicc.IccRecords;
-import com.android.internal.telephony.uicc.UiccController;
-import com.android.internal.util.AsyncChannel;
+import android.util.Log;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.a41dev.ril2.DctConstants;
+import io.a41dev.ril2.State;
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.Phone;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.RILConstants;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.gsm.GSMPhone;
+import io.a41dev.ril2.telephony.sip.LinkCapabilities;
+import io.a41dev.ril2.telephony.sip.LinkProperties;
+import io.a41dev.ril2.telephony.uicc.IccRecords;
+import io.a41dev.ril2.telephony.uicc.UiccController;
 
 /**
  * {@hide}
@@ -157,14 +145,14 @@ public final class DcTracker extends DcTrackerBase {
 
         ConnectivityManager cm = (ConnectivityManager)p.getContext().getSystemService(
                 Context.CONNECTIVITY_SERVICE);
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE, new Messenger(this));
+      /*  cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE, new Messenger(this));
         cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_MMS, new Messenger(this));
         cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_SUPL, new Messenger(this));
         cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_DUN, new Messenger(this));
         cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_HIPRI, new Messenger(this));
         cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_FOTA, new Messenger(this));
         cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_IMS, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_CBS, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_CBS, new Messenger(this));*/
     }
 
     @Override
@@ -231,21 +219,21 @@ public final class DcTracker extends DcTrackerBase {
         if(DBG) log("finalize");
     }
 
-    private ApnContext addApnContext(String type, NetworkConfig networkConfig) {
+    /*private ApnContext addApnContext(String type, NetworkConfig networkConfig) {
         ApnContext apnContext = new ApnContext(mPhone.getContext(), type, LOG_TAG, networkConfig);
         mApnContexts.put(type, apnContext);
         mPrioritySortedApnContexts.add(apnContext);
         return apnContext;
-    }
+    }*/
 
     protected void initApnContexts() {
         log("initApnContexts: E");
         boolean defaultEnabled = SystemProperties.getBoolean(DEFALUT_DATA_ON_BOOT_PROP, true);
         // Load device network attributes from resources
-        String[] networkConfigStrings = mPhone.getContext().getResources().getStringArray(
-                com.android.internal.R.array.networkAttributes);
-        for (String networkConfigString : networkConfigStrings) {
-            NetworkConfig networkConfig = new NetworkConfig(networkConfigString);
+        String[] networkConfigStrings = /*mPhone.getContext().getResources().getStringArray(
+                com.android.internal.R.array.networkAttributes)*/null;
+        /*for (String networkConfigString : networkConfigStrings) {*/
+         /*   NetworkConfig networkConfig = new NetworkConfig(networkConfigString);
             ApnContext apnContext = null;
 
             switch (networkConfig.type) {
@@ -283,10 +271,10 @@ public final class DcTracker extends DcTrackerBase {
             }
             log("initApnContexts: apnContext=" + apnContext);
         }
-        log("initApnContexts: X mApnContexts=" + mApnContexts);
+        log("initApnContexts: X mApnContexts=" + mApnContexts);*/
     }
 
-    @Override
+   /* @Override
     public LinkProperties getLinkProperties(String apnType) {
         ApnContext apnContext = mApnContexts.get(apnType);
         if (apnContext != null) {
@@ -351,8 +339,8 @@ public final class DcTracker extends DcTrackerBase {
         }
         return apnContext.isEnabled();
     }
+*/
 
-    @Override
     protected void setState(DctConstants.State s) {
         if (DBG) log("setState should not be used in GSM" + s);
     }
@@ -375,6 +363,11 @@ public final class DcTracker extends DcTrackerBase {
             return apnContext.isProvisioningApn();
         }
         return false;
+    }
+
+    @Override
+    protected void setState(State s) {
+
     }
 
     // Return state of overall
@@ -638,7 +631,7 @@ public final class DcTracker extends DcTrackerBase {
                 if (DBG) log("trySetupData: make a FAILED ApnContext IDLE so its reusable");
                 apnContext.setState(DctConstants.State.IDLE);
             }
-            int radioTech = mPhone.getServiceState().getRilDataRadioTechnology();
+            int radioTech =/* mPhone.getServiceState().getRilDataRadioTechnology()*/0;
             if (apnContext.getState() == DctConstants.State.IDLE) {
 
                 ArrayList<ApnSetting> waitingApns = buildWaitingApns(apnContext.getApnType(),
@@ -902,12 +895,12 @@ public final class DcTracker extends DcTrackerBase {
     private ApnSetting makeApnSetting(Cursor cursor) {
         String[] types = parseTypes(
                 cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.TYPE)));
-        ApnSetting apn = new ApnSetting(
+        ApnSetting apn = null; /*  new ApnSetting(
                 cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers._ID)),
                 cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NUMERIC)),
                 cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NAME)),
                 cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.APN)),
-                NetworkUtils.trimV4AddrZeros(
+              NetworkUtils.trimV4AddrZeros(
                         cursor.getString(
                         cursor.getColumnIndexOrThrow(Telephony.Carriers.PROXY))),
                 cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PORT)),
@@ -927,7 +920,7 @@ public final class DcTracker extends DcTrackerBase {
                         Telephony.Carriers.ROAMING_PROTOCOL)),
                 cursor.getInt(cursor.getColumnIndexOrThrow(
                         Telephony.Carriers.CARRIER_ENABLED)) == 1,
-                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)));
+                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)));*/
         return apn;
     }
 
@@ -1200,10 +1193,10 @@ public final class DcTracker extends DcTrackerBase {
      * @return true if only single DataConnection is allowed
      */
     private boolean isOnlySingleDcAllowed(int rilRadioTech) {
-        int[] singleDcRats = mPhone.getContext().getResources().getIntArray(
-                com.android.internal.R.array.config_onlySingleDcAllowed);
+        int[] singleDcRats =/* mPhone.getContext().getResources().getIntArray(
+                com.android.internal.R.array.config_onlySingleDcAllowed)*/null;
         boolean onlySingleDcAllowed = false;
-        if (Build.IS_DEBUGGABLE &&
+        if (true &&
                 SystemProperties.getBoolean("persist.telephony.test.singleDc", false)) {
             onlySingleDcAllowed = true;
         }
@@ -1221,7 +1214,7 @@ public final class DcTracker extends DcTrackerBase {
     protected void restartRadio() {
         if (DBG) log("restartRadio: ************TURN OFF RADIO**************");
         cleanUpAllConnections(true, Phone.REASON_RADIO_TURNED_OFF);
-        mPhone.getServiceStateTracker().powerOffRadioSafely(this);
+        /*mPhone.getServiceStateTracker().powerOffRadioSafely(this);*/
         /* Note: no need to call setRadioPower(true).  Assuming the desired
          * radio power state is still ON (as tracked by ServiceStateTracker),
          * ServiceStateTracker will call setRadioPower when it receives the
@@ -1234,20 +1227,14 @@ public final class DcTracker extends DcTrackerBase {
         SystemProperties.set("net.ppp.reset-by-timeout", String.valueOf(reset+1));
     }
 
-    /**
-     * Return true if data connection need to be setup after disconnected due to
-     * reason.
-     *
-     * @param reason the reason why data is disconnected
-     * @return true if try setup data connection is need for this reason
-     */
+
     private boolean retryAfterDisconnected(ApnContext apnContext) {
         boolean retry = true;
         String reason = apnContext.getReason();
 
-        if ( Phone.REASON_RADIO_TURNED_OFF.equals(reason) ||
+        if ( Phone.REASON_RADIO_TURNED_OFF.equals(reason)/* ||
                 (isOnlySingleDcAllowed(mPhone.getServiceState().getRilDataRadioTechnology())
-                 && isHigherPriorityApnContextActive(apnContext))) {
+                 && isHigherPriorityApnContextActive(apnContext))*/) {
             retry = false;
         }
         return retry;
@@ -1559,8 +1546,8 @@ public final class DcTracker extends DcTrackerBase {
                 log("completeConnection: MOBILE_PROVISIONING_ACTION url="
                         + mProvisioningUrl);
             }
-            Intent newIntent = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN,
-                    Intent.CATEGORY_APP_BROWSER);
+            Intent newIntent = new Intent(Intent.ACTION_MAIN,
+                    Uri.parse(Intent.CATEGORY_BROWSABLE));
             newIntent.setData(Uri.parse(mProvisioningUrl));
             newIntent.setFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT |
                     Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1629,9 +1616,9 @@ public final class DcTracker extends DcTrackerBase {
                     try {
                         String port = apn.port;
                         if (TextUtils.isEmpty(port)) port = "8080";
-                        ProxyProperties proxy = new ProxyProperties(apn.proxy,
+                       /* ProxyProperties proxy = new ProxyProperties(apn.proxy,
                                 Integer.parseInt(port), null);
-                        dcac.setLinkPropertiesHttpProxySync(proxy);
+                        dcac.setLinkPropertiesHttpProxySync(proxy);*/
                     } catch (NumberFormatException e) {
                         loge("onDataSetupComplete: NumberFormatException making ProxyProperties (" +
                                 apn.port + "): " + e);
@@ -1672,8 +1659,8 @@ public final class DcTracker extends DcTrackerBase {
                                 + " && (isProvisioningApn:" + isProvApn + " == true");
                     }
 
-                    Intent intent = new Intent(
-                            TelephonyIntents.ACTION_DATA_CONNECTION_CONNECTED_TO_PROVISIONING_APN);
+                    Intent intent = /*new Intent(
+                            Telepho nyIntents.ACTION_DATA_CONNECTION_CONNECTED_TO_PROVISIONING_APN)*/null;
                     intent.putExtra(PhoneConstants.DATA_APN_KEY, apnContext.getApnSetting().apn);
                     intent.putExtra(PhoneConstants.DATA_APN_TYPE_KEY, apnContext.getApnType());
 
@@ -1687,11 +1674,11 @@ public final class DcTracker extends DcTrackerBase {
                         }
                     }
                     LinkCapabilities linkCapabilities = getLinkCapabilities(apnType);
-                    if (linkCapabilities != null) {
+                   /* if (linkCapabilities != null) {
                         intent.putExtra(PhoneConstants.DATA_LINK_CAPABILITIES_KEY, linkCapabilities);
-                    }
+                    }*/
 
-                    mPhone.getContext().sendBroadcastAsUser(intent, UserHandle.ALL);
+                 /*   mPhone.getContext().sendBroadcastAsUser(intent, UserHandle.ALL);*/
                 }
                 if (DBG) {
                     log("onDataSetupComplete: SETUP complete type=" + apnContext.getApnType()
@@ -1708,8 +1695,8 @@ public final class DcTracker extends DcTrackerBase {
             if (cause.isEventLoggable()) {
                 // Log this failure to the Event Logs.
                 int cid = getCellLocationId();
-                EventLog.writeEvent(EventLogTags.PDP_SETUP_FAIL,
-                        cause.ordinal(), cid, TelephonyManager.getDefault().getNetworkType());
+               /* EventLog.writeEvent(EventLogTags.PDP_SETUP_FAIL,
+                        cause.ordinal(), cid, TelephonyManager.getDefault().getNetworkType());*/
             }
 
             // Count permanent failures and remove the APN we just tried
@@ -1827,8 +1814,8 @@ public final class DcTracker extends DcTrackerBase {
             if(DBG) log("onDisconnectDone: attached, ready and retry after disconnect");
             startAlarmForReconnect(getApnDelay(), apnContext);
         } else {
-            boolean restartRadioAfterProvisioning = mPhone.getContext().getResources().getBoolean(
-                    com.android.internal.R.bool.config_restartRadioAfterProvisioning);
+            boolean restartRadioAfterProvisioning = /*mPhone.getContext().getResources().getBoolean(
+                    com.android.internal.R.bool.config_restartRadioAfterProvisioning)*/ true;
 
             if (apnContext.isProvisioningApn() && restartRadioAfterProvisioning) {
                 log("onDisconnectDone: restartRadio after provisioning");
@@ -1836,12 +1823,12 @@ public final class DcTracker extends DcTrackerBase {
             }
             apnContext.setApnSetting(null);
             apnContext.setDataConnectionAc(null);
-            if (isOnlySingleDcAllowed(mPhone.getServiceState().getRilDataRadioTechnology())) {
+            /*if (isOnlySingleDcAllowed(mPhone.getServiceState().getRilDataRadioTechnology())) {
                 if(DBG) log("onDisconnectDone: isOnlySigneDcAllowed true so setup single apn");
                 setupDataOnConnectableApns(Phone.REASON_SINGLE_PDN_ARBITRATION);
             } else {
                 if(DBG) log("onDisconnectDone: not retrying");
-            }
+            }*/
         }
     }
 
@@ -2002,12 +1989,12 @@ public final class DcTracker extends DcTrackerBase {
                                                 this, mDcTesterFailBringUpAll, mDcc);
         mDataConnections.put(id, conn);
         DcAsyncChannel dcac = new DcAsyncChannel(conn, LOG_TAG);
-        int status = dcac.fullyConnectSync(mPhone.getContext(), this, conn.getHandler());
+      /*  int status = dcac.fullyConnectSync(mPhone.getContext(), this, conn.getHandler());
         if (status == AsyncChannel.STATUS_SUCCESSFUL) {
             mDataConnectionAcHashMap.put(dcac.getDataConnectionIdSync(), dcac);
         } else {
             loge("createDataConnection: Could not connect to dcac=" + dcac + " status=" + status);
-        }
+        }*/
 
         if (DBG) log("createDataConnection() X id=" + id + " dc=" + conn);
         return dcac;
@@ -2051,13 +2038,13 @@ public final class DcTracker extends DcTrackerBase {
         // connection we are locked to it for life.  This change allows ATT devices
         // to say they don't want to use preferred at all.
         boolean usePreferred = true;
-        try {
+       /* try {
             usePreferred = ! mPhone.getContext().getResources().getBoolean(com.android.
                     internal.R.bool.config_dontPreferApn);
         } catch (Resources.NotFoundException e) {
             if (DBG) log("buildWaitingApns: usePreferred NotFoundException set to true");
             usePreferred = true;
-        }
+        }*/
         if (DBG) {
             log("buildWaitingApns: usePreferred=" + usePreferred
                     + " canSetPreferApn=" + mCanSetPreferApn
@@ -2257,7 +2244,7 @@ public final class DcTracker extends DcTrackerBase {
                         trySetupData(apnContext);
                     } else {
                         loge("**** Default ApnContext not found ****");
-                        if (Build.IS_DEBUGGABLE) {
+                        if (true) {
                             throw new RuntimeException("Default ApnContext not found");
                         }
                     }
@@ -2348,12 +2335,12 @@ public final class DcTracker extends DcTrackerBase {
 
     @Override
     protected void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 
     @Override
     protected void loge(String s) {
-        Rlog.e(LOG_TAG, s);
+        Log.e(LOG_TAG, s);
     }
 
     @Override

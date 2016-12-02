@@ -18,8 +18,8 @@ package io.a41dev.ril2.telephony.cdma.sms;
 
 import android.util.SparseIntArray;
 
-import com.android.internal.telephony.SmsHeader;
-import com.android.internal.util.HexDump;
+import io.a41dev.ril2.telephony.HexDump;
+import io.a41dev.ril2.telephony.SmsHeader;
 
 public class UserData {
 

@@ -16,7 +16,8 @@
 
 package io.a41dev.ril2.telephony.uicc;
 
-import android.telephony.Rlog;
+
+import android.util.Log;
 
 /**
  * Wrapper class for an ICC EF containing a bit field of enabled services.
@@ -43,7 +44,7 @@ public abstract class IccServiceTable {
         int offset = service / 8;
         if (offset >= mServiceTable.length) {
             // Note: Enums are zero-based, but the TS service numbering is one-based
-            Rlog.e(getTag(), "isAvailable for service " + (service + 1) + " fails, max service is " +
+            Log.e(getTag(), "isAvailable for service " + (service + 1) + " fails, max service is " +
                     (mServiceTable.length * 8));
             return false;
         }

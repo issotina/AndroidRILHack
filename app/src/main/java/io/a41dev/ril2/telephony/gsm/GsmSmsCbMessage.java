@@ -16,14 +16,14 @@
 
 package io.a41dev.ril2.telephony.gsm;
 
-import android.telephony.SmsCbLocation;
-import android.telephony.SmsCbMessage;
 import android.util.Pair;
 
-import com.android.internal.telephony.GsmAlphabet;
-import com.android.internal.telephony.SmsConstants;
-
 import java.io.UnsupportedEncodingException;
+
+import io.a41dev.ril2.telephony.GsmAlphabet;
+import io.a41dev.ril2.telephony.SmsCbLocation;
+import io.a41dev.ril2.telephony.SmsCbMessage;
+import io.a41dev.ril2.telephony.SmsConstants;
 
 /**
  * Parses a GSM or UMTS format SMS-CB message into an {@link SmsCbMessage} object. The class is
@@ -60,7 +60,7 @@ public class GsmSmsCbMessage {
      * @param pdus PDU bytes
      */
     static SmsCbMessage createSmsCbMessage(SmsCbHeader header, SmsCbLocation location,
-            byte[][] pdus) throws IllegalArgumentException {
+                                           byte[][] pdus) throws IllegalArgumentException {
         if (header.isEtwsPrimaryNotification()) {
             return new SmsCbMessage(SmsCbMessage.MESSAGE_FORMAT_3GPP,
                     header.getGeographicalScope(), header.getSerialNumber(),

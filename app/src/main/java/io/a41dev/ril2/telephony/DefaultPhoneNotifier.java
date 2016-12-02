@@ -16,30 +16,27 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.net.LinkCapabilities;
-import android.net.LinkProperties;
+
 import android.os.Bundle;
-import android.os.RemoteException;
-import android.os.ServiceManager;
-import android.telephony.CellInfo;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 
-import com.android.internal.telephony.ITelephonyRegistry;
-
 import java.util.List;
+
+import io.a41dev.ril2.telephony.sip.LinkCapabilities;
+import io.a41dev.ril2.telephony.sip.LinkProperties;
 
 /**
  * broadcast intents
  */
 public class DefaultPhoneNotifier implements PhoneNotifier {
 
-    private ITelephonyRegistry mRegistry;
+   // private ITelephonyRegistry mRegistry;
 
     /*package*/
     DefaultPhoneNotifier() {
-        mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
-                    "telephony.registry"));
+       /* mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                    "telephony.registry"));*/
     }
 
     @Override
@@ -49,11 +46,11 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         if (ringingCall != null && ringingCall.getEarliestConnection() != null){
             incomingNumber = ringingCall.getEarliestConnection().getAddress();
         }
-        try {
+        /*try {
             mRegistry.notifyCallState(convertCallState(sender.getState()), incomingNumber);
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
@@ -63,47 +60,49 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
             ss = new ServiceState();
             ss.setStateOutOfService();
         }
-        try {
+       /* try {
             mRegistry.notifyServiceState(ss);
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifySignalStrength(Phone sender) {
-        try {
+     /*   try {
             mRegistry.notifySignalStrength(sender.getSignalStrength());
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifyMessageWaitingChanged(Phone sender) {
-        try {
+       /* try {
             mRegistry.notifyMessageWaitingChanged(sender.getMessageWaitingIndicator());
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifyCallForwardingChanged(Phone sender) {
-        try {
+       /* try {
             mRegistry.notifyCallForwardingChanged(sender.getCallForwardingIndicator());
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifyDataActivity(Phone sender) {
-        try {
+     /*   try {
             mRegistry.notifyDataActivity(convertDataActivityState(sender.getDataActivityState()));
         } catch (RemoteException ex) {
             // system process is dead
         }
+        */
+
     }
 
     @Override
@@ -117,7 +116,7 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         // TODO
         // use apnType as the key to which connection we're talking about.
         // pass apnType back up to fetch particular for this one.
-        TelephonyManager telephony = TelephonyManager.getDefault();
+        TelephonyManager telephony = /*TelephonyManager.getDefault()*/ null;
         LinkProperties linkProperties = null;
         LinkCapabilities linkCapabilities = null;
         boolean roaming = false;
@@ -129,7 +128,7 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         ServiceState ss = sender.getServiceState();
         if (ss != null) roaming = ss.getRoaming();
 
-        try {
+       /* try {
             mRegistry.notifyDataConnection(
                     convertDataState(state),
                     sender.isDataConnectivityPossible(apnType), reason,
@@ -142,45 +141,45 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
                     roaming);
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifyDataConnectionFailed(Phone sender, String reason, String apnType) {
-        try {
+      /*  try {
             mRegistry.notifyDataConnectionFailed(reason, apnType);
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifyCellLocation(Phone sender) {
         Bundle data = new Bundle();
-        sender.getCellLocation().fillInNotifierBundle(data);
+       /* sender.getCellLocation().fillInNotifierBundle(data);
         try {
             mRegistry.notifyCellLocation(data);
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     @Override
     public void notifyCellInfo(Phone sender, List<CellInfo> cellInfo) {
-        try {
+       /* try {
             mRegistry.notifyCellInfo(cellInfo);
         } catch (RemoteException ex) {
 
-        }
+        }*/
     }
 
     @Override
     public void notifyOtaspChanged(Phone sender, int otaspMode) {
-        try {
+      /*  try {
             mRegistry.notifyOtaspChanged(otaspMode);
         } catch (RemoteException ex) {
             // system process is dead
-        }
+        }*/
     }
 
     /**

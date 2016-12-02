@@ -19,26 +19,25 @@ package io.a41dev.ril2.telephony.cdma;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.os.Message;
-import android.os.SystemProperties;
 import android.preference.PreferenceManager;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.SmsCbMessage;
-
-import com.android.internal.telephony.CellBroadcastHandler;
-import com.android.internal.telephony.CommandsInterface;
-import com.android.internal.telephony.InboundSmsHandler;
-import com.android.internal.telephony.InboundSmsTracker;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsMessageBase;
-import com.android.internal.telephony.SmsStorageMonitor;
-import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.WspTypeDecoder;
-import com.android.internal.telephony.cdma.sms.SmsEnvelope;
 
 import java.util.Arrays;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.TelephonyProperties;
+import io.a41dev.ril2.telephony.CellBroadcastHandler;
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.InboundSmsHandler;
+import io.a41dev.ril2.telephony.InboundSmsTracker;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.SmsCbMessage;
+import io.a41dev.ril2.telephony.SmsConstants;
+import io.a41dev.ril2.telephony.SmsMessageBase;
+import io.a41dev.ril2.telephony.SmsStorageMonitor;
+import io.a41dev.ril2.telephony.Telephony.Sms.Intents;
+import io.a41dev.ril2.telephony.WspTypeDecoder;
+import io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope;
 
 /**
  * Subclass of {@link InboundSmsHandler} for 3GPP2 type messages.
@@ -51,8 +50,8 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
     private byte[] mLastDispatchedSmsFingerprint;
     private byte[] mLastAcknowledgedSmsFingerprint;
 
-    private final boolean mCheckForDuplicatePortsInOmadmWapPush = Resources.getSystem().getBoolean(
-            com.android.internal.R.bool.config_duplicate_port_omadm_wappush);
+    private final boolean mCheckForDuplicatePortsInOmadmWapPush = /*Resources.getSystem().getBoolean(
+            com.android.internal.R.bool.config_duplicate_port_omadm_wappush)*/ false;
 
     /**
      * Create a new inbound SMS handler for CDMA.

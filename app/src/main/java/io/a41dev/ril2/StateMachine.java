@@ -26,6 +26,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Vector;
+
+import io.a41dev.ril2.telephony.InboundSmsHandler;
+import io.a41dev.ril2.telephony.cat.RilMessageDecoder;
+import io.a41dev.ril2.telephony.dataconnection.DcController;
+
 /**
  * {@hide}
  *
@@ -1019,7 +1024,7 @@ public class StateMachine {
             addState(mHaltingState, null);
             addState(mQuittingState, null);
         }
-        /** @see StateMachine#setInitialState(State) */
+        /** @see StateMachine#setInitialState(RilMessageDecoder.StateCmdParamsReady) */
         private final void setInitialState(State initialState) {
             if (mDbg) Log.d(TAG, "setInitialState: initialState=" + initialState.getName());
             mInitialState = initialState;
@@ -1076,8 +1081,9 @@ public class StateMachine {
      * Constructor creates a StateMachine with its own thread.
      *
      * @param name of the state machine
+     * @param handler
      */
-    protected StateMachine(String name) {
+    protected StateMachine(String name, Handler handler) {
         mSmThread = new HandlerThread(name);
         mSmThread.start();
         Looper looper = mSmThread.getLooper();
@@ -1115,7 +1121,7 @@ public class StateMachine {
      * Add a new state to the state machine, parent will be null
      * @param state to add
      */
-    protected final void addState(State state) {
+    protected final void addState(RilMessageDecoder.StateCmdParamsReady state) {
         mSmHandler.addState(state, null);
     }
     /**
@@ -1124,7 +1130,7 @@ public class StateMachine {
      *
      * @param initialState is the state which will receive the first message.
      */
-    protected final void setInitialState(State initialState) {
+    protected final void setInitialState(RilMessageDecoder.StateCmdParamsReady initialState) {
         mSmHandler.setInitialState(initialState);
     }
     /**

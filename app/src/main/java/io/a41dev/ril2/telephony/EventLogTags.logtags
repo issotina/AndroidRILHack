@@ -1,6 +1,6 @@
 # See system/core/logcat/event.logtags for a description of the format of this file.
 
-option java_package com.android.internal.telephony;
+option java_package io.a41dev.ril2.telephony;
 
 # PDP Context has a bad DNS address
 50100 pdp_bad_dns_address (dns_address|3)

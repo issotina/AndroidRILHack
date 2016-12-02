@@ -21,13 +21,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncResult;
 import android.os.SystemClock;
-import android.telephony.Rlog;
 import android.text.TextUtils;
+import android.util.Log;
 
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.RILConstants;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.RILConstants;
 
 /**
  * The Data Connection Retry Alarm Controller.
@@ -68,7 +68,7 @@ public class DcRetryAlarmController {
                             + " sendMessage(what:" + mDc.getWhatToString(what)
                             + ", tag:" + tag + ")");
                 }
-                mDc.sendMessage(mDc.obtainMessage(what, tag, 0));
+            /*    mDc.sendMessage(mDc.obtainMessage(what, tag, 0));*/
             } else {
                 if (DBG) log("onReceive: unknown action=" + action);
             }
@@ -76,17 +76,17 @@ public class DcRetryAlarmController {
     };
 
     DcRetryAlarmController(PhoneBase phone, DataConnection dc) {
-        mLogTag = dc.getName();
+        mLogTag = /*dc.getName()*/ "";
         mPhone = phone;
         mDc = dc;
         mAlarmManager = (AlarmManager) mPhone.getContext().getSystemService(Context.ALARM_SERVICE);
-        mActionRetry = mDc.getClass().getCanonicalName() + "." + mDc.getName() + ".action_retry";
+        mActionRetry = /*mDc.getClass().getCanonicalName() + "." + mDc.getName() +*/ ".action_retry";
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(mActionRetry);
         log("DcRetryAlarmController: register for intent action=" + mActionRetry);
 
-        mPhone.getContext().registerReceiver(mIntentReceiver, filter, null, mDc.getHandler());
+       /* mPhone.getContext().registerReceiver(mIntentReceiver, filter, null, mDc.getHandler());*/
     }
 
     /**
@@ -164,6 +164,6 @@ public class DcRetryAlarmController {
     }
 
     private void log(String s) {
-        Rlog.d(mLogTag, "[dcRac] " + s);
+        Log.d(mLogTag, "[dcRac] " + s);
     }
 }

@@ -29,11 +29,12 @@ import io.a41dev.ril2.telephony.uicc.IccUtils;
  * Class used for queuing raw ril messages, decoding them into CommanParams
  * objects and sending the result back to the CAT Service.
  */
-class RilMessageDecoder extends StateMachine {
+public class RilMessageDecoder extends StateMachine {
 
     // constants
     private static final int CMD_START = 1;
     private static final int CMD_PARAMS_READY = 2;
+    private static final Handler handler = null;
 
     // members
     private static RilMessageDecoder sInstance = null;
@@ -42,7 +43,7 @@ class RilMessageDecoder extends StateMachine {
     private Handler mCaller = null;
 
     // States
-    private StateStart mStateStart = new StateStart();
+    private StateCmdParamsReady mStateStart = new StateCmdParamsReady();
     private StateCmdParamsReady mStateCmdParamsReady = new StateCmdParamsReady();
 
     /**
@@ -92,7 +93,7 @@ class RilMessageDecoder extends StateMachine {
     }
 
     private RilMessageDecoder(Handler caller, IccFileHandler fh) {
-        super("RilMessageDecoder");
+        super("RilMessageDecoder", handler);
 
         addState(mStateStart);
         addState(mStateCmdParamsReady);
@@ -102,7 +103,7 @@ class RilMessageDecoder extends StateMachine {
         mCmdParamsFactory = CommandParamsFactory.getInstance(this, fh);
     }
 
-    private class StateStart extends State {
+    public class StateStart extends State {
         @Override
         public boolean processMessage(Message msg) {
             if (msg.what == CMD_START) {
@@ -117,7 +118,7 @@ class RilMessageDecoder extends StateMachine {
         }
     }
 
-    private class StateCmdParamsReady extends State {
+    public class StateCmdParamsReady extends State {
         @Override
         public boolean processMessage(Message msg) {
             if (msg.what == CMD_PARAMS_READY) {

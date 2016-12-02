@@ -29,7 +29,7 @@ public class TtyIntent {
      * {@hide}
      */
     public static final String TTY_ENABLED_CHANGE_ACTION =
-        "com.android.internal.telephony.cdma.intent.action.TTY_ENABLED_CHANGE";
+        "io.a41dev.ril2.telephony.cdma.intent.action.TTY_ENABLED_CHANGE";
 
     /**
      * The lookup key for a boolean that indicates whether TTY mode is enabled or
@@ -48,15 +48,15 @@ public class TtyIntent {
      * {@hide}
      */
     public static final String TTY_PREFERRED_MODE_CHANGE_ACTION =
-        "com.android.internal.telephony.cdma.intent.action.TTY_PREFERRED_MODE_CHANGE";
+        "io.a41dev.ril2.telephony.cdma.intent.action.TTY_PREFERRED_MODE_CHANGE";
 
     /**
      * The lookup key for an int that indicates preferred TTY mode.
      * Valid modes are:
-     * - {@link com.android.internal.telephony.Phone#TTY_MODE_OFF}
-     * - {@link com.android.internal.telephony.Phone#TTY_MODE_FULL}
-     * - {@link com.android.internal.telephony.Phone#TTY_MODE_HCO}
-     * - {@link com.android.internal.telephony.Phone#TTY_MODE_VCO}
+     * - {@link io.a41dev.ril2.telephony.Phone#TTY_MODE_OFF}
+     * - {@link io.a41dev.ril2.telephony.Phone#TTY_MODE_FULL}
+     * - {@link io.a41dev.ril2.telephony.Phone#TTY_MODE_HCO}
+     * - {@link io.a41dev.ril2.telephony.Phone#TTY_MODE_VCO}
      *
      * {@hide}
      */

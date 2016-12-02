@@ -19,10 +19,10 @@ package io.a41dev.ril2.telephony;
 import android.os.Handler;
 import android.os.Message;
 
-import com.android.internal.telephony.IccCardConstants.State;
-import com.android.internal.telephony.uicc.IccCardApplicationStatus;
-import com.android.internal.telephony.uicc.IccFileHandler;
-import com.android.internal.telephony.uicc.IccRecords;
+import io.a41dev.ril2.State;
+import io.a41dev.ril2.telephony.uicc.IccCardApplicationStatus;
+import io.a41dev.ril2.telephony.uicc.IccFileHandler;
+import io.a41dev.ril2.telephony.uicc.IccRecords;
 
 /**
  * {@hide}
@@ -86,7 +86,7 @@ public interface IccCard {
      * If the supplied PIN is incorrect:
      * ((AsyncResult)onComplete.obj).exception != null
      * && ((AsyncResult)onComplete.obj).exception
-     *       instanceof com.android.internal.telephony.gsm.CommandException)
+     *       instanceof io.a41dev.ril2.telephony.gsm.CommandException)
      * && ((CommandException)(((AsyncResult)onComplete.obj).exception))
      *          .getCommandError() == CommandException.Error.PASSWORD_INCORRECT
      */

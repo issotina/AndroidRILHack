@@ -16,11 +16,9 @@
 
 package io.a41dev.ril2.telephony;
 
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsHeader;
 import java.util.Arrays;
 
-import android.provider.Telephony;
+
 
 /**
  * Base class declaring the specific methods and members for SmsMessage.

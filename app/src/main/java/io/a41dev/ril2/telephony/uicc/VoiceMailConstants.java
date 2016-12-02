@@ -17,19 +17,17 @@
 package io.a41dev.ril2.telephony.uicc;
 
 import android.os.Environment;
+import android.util.Log;
 import android.util.Xml;
-import android.telephony.Rlog;
-
-import java.util.HashMap;
-import java.io.FileReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import com.android.internal.util.XmlUtils;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
  * {@hide}
@@ -79,7 +77,7 @@ class VoiceMailConstants {
         try {
             vmReader = new FileReader(vmFile);
         } catch (FileNotFoundException e) {
-            Rlog.w(LOG_TAG, "Can't open " +
+            Log.w(LOG_TAG, "Can't open " +
                     Environment.getRootDirectory() + "/" + PARTNER_VOICEMAIL_PATH);
             return;
         }
@@ -88,10 +86,10 @@ class VoiceMailConstants {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(vmReader);
 
-            XmlUtils.beginDocument(parser, "voicemail");
+           // XmlUtils.beginDocument(parser, "voicemail");
 
             while (true) {
-                XmlUtils.nextElement(parser);
+             //   XmlUtils.nextElement(parser);
 
                 String name = parser.getName();
                 if (!"voicemail".equals(name)) {
@@ -107,10 +105,8 @@ class VoiceMailConstants {
                 CarrierVmMap.put(numeric, data);
             }
         } catch (XmlPullParserException e) {
-            Rlog.w(LOG_TAG, "Exception in Voicemail parser " + e);
-        } catch (IOException e) {
-            Rlog.w(LOG_TAG, "Exception in Voicemail parser " + e);
-        } finally {
+            Log.w(LOG_TAG, "Exception in Voicemail parser " + e);
+        }finally {
             try {
                 if (vmReader != null) {
                     vmReader.close();

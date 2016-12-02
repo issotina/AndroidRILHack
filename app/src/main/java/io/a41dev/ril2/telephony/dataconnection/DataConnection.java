@@ -17,40 +17,33 @@
 package io.a41dev.ril2.telephony.dataconnection;
 
 
-import com.android.internal.telephony.CommandException;
-import com.android.internal.telephony.DctConstants;
-import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.RILConstants;
-import com.android.internal.telephony.RetryManager;
-import com.android.internal.util.AsyncChannel;
-import com.android.internal.util.Protocol;
-import com.android.internal.util.State;
-import com.android.internal.util.StateMachine;
-
 import android.app.PendingIntent;
-import android.net.LinkCapabilities;
-import android.net.LinkProperties;
-import android.net.ProxyProperties;
-import android.os.AsyncResult;
-import android.os.Build;
 import android.os.Message;
-import android.os.SystemClock;
-import android.os.SystemProperties;
-import android.telephony.Rlog;
 import android.telephony.ServiceState;
-import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Pair;
 import android.util.Patterns;
-import android.util.TimeUtils;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import io.a41dev.ril2.DctConstants;
+import io.a41dev.ril2.State;
+import io.a41dev.ril2.StateMachine;
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CommandException;
+import io.a41dev.ril2.telephony.Phone;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.RILConstants;
+import io.a41dev.ril2.telephony.RetryManager;
+import io.a41dev.ril2.telephony.sip.LinkCapabilities;
+import io.a41dev.ril2.telephony.sip.LinkProperties;
 
 /**
  * {@hide}
@@ -90,7 +83,7 @@ public final class DataConnection extends StateMachine {
     private DcTesterFailBringUpAll mDcTesterFailBringUpAll;
 
     private static AtomicInteger mInstanceNumber = new AtomicInteger(0);
-    private AsyncChannel mAc;
+    /*private AsyncChannel mAc;*/
 
     // Utilities for the DataConnection
     private DcRetryAlarmController mDcRetryAlarmController;
@@ -175,7 +168,7 @@ public final class DataConnection extends StateMachine {
 
 
     // ***** Event codes for driving the state machine, package visible for Dcc
-    static final int BASE = Protocol.BASE_DATA_CONNECTION;
+    static final int BASE = 0x00040000;
     static final int EVENT_CONNECT = BASE + 0;
     static final int EVENT_SETUP_DATA_CONNECTION_DONE = BASE + 1;
     static final int EVENT_GET_LAST_FAIL_DONE = BASE + 2;
@@ -247,7 +240,7 @@ public final class DataConnection extends StateMachine {
     /* Getter functions */
 
     LinkCapabilities getCopyLinkCapabilities() {
-        return new LinkCapabilities(mLinkCapabilities);
+        return new LinkCapabilities();
     }
 
     LinkProperties getCopyLinkProperties() {
@@ -266,9 +259,9 @@ public final class DataConnection extends StateMachine {
         return mApnSetting;
     }
 
-    void setLinkPropertiesHttpProxy(ProxyProperties proxy) {
+    /*void setLinkPropertiesHttpProxy(ProxyProperties proxy) {
         mLinkProperties.setHttpProxy(proxy);
-    }
+    }*/
 
     static class UpdateLinkPropertyResult {
         public DataCallResponse.SetupResult setupResult = DataCallResponse.SetupResult.SUCCESS;
@@ -295,7 +288,7 @@ public final class DataConnection extends StateMachine {
             return result;
         }
         // copy HTTP proxy as it is not part DataCallResponse.
-        result.newLp.setHttpProxy(mLinkProperties.getHttpProxy());
+       /* result.newLp.setHttpProxy(mLinkProperties.getHttpProxy());*/
 
         if (DBG && (! result.oldLp.equals(result.newLp))) {
             log("updateLinkProperty old LP=" + result.oldLp);
@@ -312,7 +305,7 @@ public final class DataConnection extends StateMachine {
                 DcController dcc) {
         super(name, dcc.getHandler());
         setLogRecSize(300);
-        setLogOnlyTransitions(true);
+      /*  setLogOnlyTransitions(true);*/
         if (DBG) log("DataConnection constructor E");
 
         mPhone = phone;
@@ -322,10 +315,10 @@ public final class DataConnection extends StateMachine {
         mId = id;
         mCid = -1;
         mDcRetryAlarmController = new DcRetryAlarmController(mPhone, this);
-        mRilRat = mPhone.getServiceState().getRilDataRadioTechnology();
-        mDataRegState = mPhone.getServiceState().getDataRegState();
+      /*  mRilRat = mPhone.getServiceState().getRilDataRadioTechnology();
+        mDataRegState = mPhone.getServiceState().getDataRegState();*/
 
-        addState(mDefaultState);
+      /*  addState(mDefaultState);
             addState(mInactiveState, mDefaultState);
             addState(mActivatingState, mDefaultState);
             addState(mRetryingState, mDefaultState);
@@ -333,21 +326,21 @@ public final class DataConnection extends StateMachine {
             addState(mDisconnectingState, mDefaultState);
             addState(mDisconnectingErrorCreatingConnection, mDefaultState);
         setInitialState(mInactiveState);
-
+*/
         mApnContexts = new ArrayList<ApnContext>();
         if (DBG) log("DataConnection constructor X");
     }
 
     private String getRetryConfig(boolean forDefault) {
-        int nt = mPhone.getServiceState().getNetworkType();
-
-        if (Build.IS_DEBUGGABLE) {
+        /*int nt = mPhone.getServiceState().getNetworkType();
+*/
+        if (true) {
             String config = SystemProperties.get("test.data_retry_config");
             if (! TextUtils.isEmpty(config)) {
                 return config;
             }
         }
-
+/*
         if ((nt == TelephonyManager.NETWORK_TYPE_CDMA) ||
             (nt == TelephonyManager.NETWORK_TYPE_1xRTT) ||
             (nt == TelephonyManager.NETWORK_TYPE_EVDO_0) ||
@@ -363,7 +356,8 @@ public final class DataConnection extends StateMachine {
             } else {
                 return SystemProperties.get("ro.gsm.2nd_data_retry_config");
             }
-        }
+        }*/
+        return "";
     }
 
     private void configureRetry(boolean forDefault) {
@@ -785,10 +779,6 @@ public final class DataConnection extends StateMachine {
             // Remove ourselves from the DC lists
             mDcController.removeDc(DataConnection.this);
 
-            if (mAc != null) {
-                mAc.disconnected();
-                mAc = null;
-            }
             mDcRetryAlarmController.dispose();
             mDcRetryAlarmController = null;
             mApnContexts = null;
@@ -812,7 +802,7 @@ public final class DataConnection extends StateMachine {
                 log("DcDefault msg=" + getWhatToString(msg.what)
                         + " RefCount=" + mApnContexts.size());
             }
-            switch (msg.what) {
+         /*   switch (msg.what) {
                 case AsyncChannel.CMD_CHANNEL_FULL_CONNECTION: {
                     if (mAc != null) {
                         if (VDBG) log("Disconnecting to previous connection mAc=" + mAc);
@@ -935,7 +925,7 @@ public final class DataConnection extends StateMachine {
                     }
                     break;
             }
-
+*/
             return retVal;
         }
     }
@@ -1071,7 +1061,7 @@ public final class DataConnection extends StateMachine {
                         + ", mConnectionParams.mRilRat=" + mConnectionParams.mRilRat
                         + " != mRilRat:" + mRilRat
                         + " transitionTo(mInactiveState)";
-                    logAndAddLogRec(s);
+                  /*  logAndAddLogRec(s);*/
                 }
                 mInactiveState.setEnterNotificationParams(DcFailCause.LOST_CONNECTION);
                 transitionTo(mInactiveState);
@@ -1117,7 +1107,7 @@ public final class DataConnection extends StateMachine {
                                     + " giving up changed from " + mRilRat
                                     + " to rat=" + rat
                                     + " or drs changed from " + mDataRegState + " to drs=" + drs;
-                            logAndAddLogRec(s);
+                           /* logAndAddLogRec(s);*/
                         }
                         mDataRegState = drs;
                         mRilRat = rat;
@@ -1636,7 +1626,7 @@ public final class DataConnection extends StateMachine {
             b.append(cmdToString(msg.what));
 
             b.append(" when=");
-            TimeUtils.formatDuration(msg.getWhen() - SystemClock.uptimeMillis(), b);
+            /*TimeUtils.formatDuration(msg.getWhen() - SystemClock.uptimeMillis(), b);*/
 
             if (msg.arg1 != 0) {
                 b.append(" arg1=");
@@ -1667,7 +1657,7 @@ public final class DataConnection extends StateMachine {
     }
 
     static void slog(String s) {
-        Rlog.d("DC", s);
+        Log.d("DC", s);
     }
 
     /**
@@ -1675,9 +1665,8 @@ public final class DataConnection extends StateMachine {
      *
      * @param s is string log
      */
-    @Override
     protected void log(String s) {
-        Rlog.d(getName(), s);
+        Log.d(getName(), s);
     }
 
     /**
@@ -1685,9 +1674,8 @@ public final class DataConnection extends StateMachine {
      *
      * @param s is string log
      */
-    @Override
     protected void logd(String s) {
-        Rlog.d(getName(), s);
+        Log.d(getName(), s);
     }
 
     /**
@@ -1695,9 +1683,8 @@ public final class DataConnection extends StateMachine {
      *
      * @param s is string log
      */
-    @Override
     protected void logv(String s) {
-        Rlog.v(getName(), s);
+        Log.v(getName(), s);
     }
 
     /**
@@ -1705,9 +1692,8 @@ public final class DataConnection extends StateMachine {
      *
      * @param s is string log
      */
-    @Override
     protected void logi(String s) {
-        Rlog.i(getName(), s);
+        Log.i(getName(), s);
     }
 
     /**
@@ -1715,9 +1701,8 @@ public final class DataConnection extends StateMachine {
      *
      * @param s is string log
      */
-    @Override
     protected void logw(String s) {
-        Rlog.w(getName(), s);
+        Log.w(getName(), s);
     }
 
     /**
@@ -1725,9 +1710,8 @@ public final class DataConnection extends StateMachine {
      *
      * @param s is string log
      */
-    @Override
     protected void loge(String s) {
-        Rlog.e(getName(), s);
+        Log.e(getName(), s);
     }
 
     /**
@@ -1736,9 +1720,8 @@ public final class DataConnection extends StateMachine {
      * @param s is string log
      * @param e is a Throwable which logs additional information.
      */
-    @Override
     protected void loge(String s, Throwable e) {
-        Rlog.e(getName(), s, e);
+        Log.e(getName(), s, e);
     }
 
     /** Doesn't print mApnList of ApnContext's which would be recursive */
@@ -1789,13 +1772,13 @@ public final class DataConnection extends StateMachine {
         pw.println(" mDataRegState=" + mDataRegState);
         pw.println(" mRilRat=" + mRilRat);
         pw.println(" mLinkCapabilities=" + mLinkCapabilities);
-        pw.println(" mCreateTime=" + TimeUtils.logTimeOfDay(mCreateTime));
+    /*    pw.println(" mCreateTime=" + TimeUtils.logTimeOfDay(mCreateTime));
         pw.println(" mLastFailTime=" + TimeUtils.logTimeOfDay(mLastFailTime));
         pw.println(" mLastFailCause=" + mLastFailCause);
         pw.flush();
         pw.println(" mUserData=" + mUserData);
         pw.println(" mInstanceNumber=" + mInstanceNumber);
-        pw.println(" mAc=" + mAc);
+        pw.println(" mAc=" + mAc);*/
         pw.println(" mDcRetryAlarmController=" + mDcRetryAlarmController);
         pw.flush();
     }

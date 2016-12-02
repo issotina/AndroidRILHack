@@ -20,9 +20,8 @@ import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.telephony.Rlog;
+import android.util.Log;
 
-import com.android.internal.telephony.GsmAlphabet;
 import java.io.UnsupportedEncodingException;
 
 /**
@@ -185,7 +184,7 @@ public class IccUtils {
                 try {
                     ret = new String(data, offset + 1, ucslen * 2, "utf-16be");
                 } catch (UnsupportedEncodingException ex) {
-                    Rlog.e(LOG_TAG, "implausible UnsupportedEncodingException",
+                    Log.e(LOG_TAG, "implausible UnsupportedEncodingException",
                           ex);
                 }
 
@@ -255,8 +254,8 @@ public class IccUtils {
         Resources resource = Resources.getSystem();
         String defaultCharset = "";
         try {
-            defaultCharset =
-                    resource.getString(com.android.internal.R.string.gsm_alphabet_default_charset);
+            defaultCharset =/*
+                    resource.getString(com.android.internal.R.string.gsm_alphabet_default_charset)*/"";
         } catch (NotFoundException e) {
             // Ignore Exception and defaultCharset is set to a empty string.
         }
@@ -358,7 +357,7 @@ public class IccUtils {
                             offset + 1, length - 1, "utf-16");
                 } catch (UnsupportedEncodingException ex) {
                     ret = "";
-                    Rlog.e(LOG_TAG,"implausible UnsupportedEncodingException", ex);
+                    Log.e(LOG_TAG,"implausible UnsupportedEncodingException", ex);
                 }
             break;
 
@@ -407,7 +406,7 @@ public class IccUtils {
         }
 
         if (pixelIndex != numOfPixels) {
-            Rlog.e(LOG_TAG, "parse end and size error");
+            Log.e(LOG_TAG, "parse end and size error");
         }
         return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888);
     }
@@ -459,7 +458,7 @@ public class IccUtils {
     private static int[] mapTo2OrderBitColor(byte[] data, int valueIndex,
             int length, int[] colorArray, int bits) {
         if (0 != (8 % bits)) {
-            Rlog.e(LOG_TAG, "not event number of color");
+            Log.e(LOG_TAG, "not event number of color");
             return mapToNon2OrderBitColor(data, valueIndex, length, colorArray,
                     bits);
         }
@@ -497,7 +496,7 @@ public class IccUtils {
     private static int[] mapToNon2OrderBitColor(byte[] data, int valueIndex,
             int length, int[] colorArray, int bits) {
         if (0 == (8 % bits)) {
-            Rlog.e(LOG_TAG, "not odd number of color");
+            Log.e(LOG_TAG, "not odd number of color");
             return mapTo2OrderBitColor(data, valueIndex, length, colorArray,
                     bits);
         }

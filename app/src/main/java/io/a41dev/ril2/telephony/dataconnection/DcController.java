@@ -16,31 +16,26 @@
 
 package io.a41dev.ril2.telephony.dataconnection;
 
-import android.net.LinkAddress;
-import android.net.NetworkUtils;
-import android.net.LinkProperties.CompareResult;
-import android.os.AsyncResult;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.telephony.Rlog;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.dataconnection.DataConnection.UpdateLinkPropertyResult;
-import com.android.internal.util.State;
-import com.android.internal.util.StateMachine;
+import android.util.Log;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import io.a41dev.ril2.State;
+import io.a41dev.ril2.StateMachine;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.PhoneBase;
+
 /**
  * Data Connection Controller which is a package visible class and controls
  * multiple data connections. For instance listening for unsolicited messages
  * and then demultiplexing them to the appropriate DC.
  */
-class DcController extends StateMachine {
+public class DcController extends StateMachine {
     private static final boolean DBG = true;
     private static final boolean VDBG = false;
 
@@ -63,7 +58,7 @@ class DcController extends StateMachine {
     static final int DATA_CONNECTION_ACTIVE_PH_LINK_DORMANT = 1;
     static final int DATA_CONNECTION_ACTIVE_PH_LINK_UP = 2;
 
-    private DccDefaultState mDccDefaultState = new DccDefaultState();
+    /*private RilMessageDecoder.StateCmdParamsReady mDccDefaultState = new DccDefaultState();*/
 
     /**
      * Constructor.
@@ -77,12 +72,12 @@ class DcController extends StateMachine {
             Handler handler) {
         super(name, handler);
         setLogRecSize(300);
-        log("E ctor");
+     /*   log("E ctor");*/
         mPhone = phone;
         mDct = dct;
-        addState(mDccDefaultState);
-        setInitialState(mDccDefaultState);
-        log("X ctor");
+      /*  addState(mDccDefaultState);
+        setInitialState(mDccDefaultState);*/
+      /*  log("X ctor");*/
     }
 
     static DcController makeDcc(PhoneBase phone, DcTrackerBase dct, Handler handler) {
@@ -92,7 +87,7 @@ class DcController extends StateMachine {
     }
 
     void dispose() {
-        log("dispose: call quiteNow()");
+       /* log("dispose: call quiteNow()");*/
         quitNow();
     }
 
@@ -107,7 +102,7 @@ class DcController extends StateMachine {
 
     void addActiveDcByCid(DataConnection dc) {
         if (DBG && dc.mCid < 0) {
-            log("addActiveDcByCid dc.mCid < 0 dc=" + dc);
+            /*log("addActiveDcByCid dc.mCid < 0 dc=" + dc);*/
         }
         mDcListActiveByCid.put(dc.mCid, dc);
     }
@@ -115,18 +110,18 @@ class DcController extends StateMachine {
     void removeActiveDcByCid(DataConnection dc) {
         DataConnection removedDc = mDcListActiveByCid.remove(dc.mCid);
         if (DBG && removedDc == null) {
-            log("removeActiveDcByCid removedDc=null dc=" + dc);
+            /*log("removeActiveDcByCid removedDc=null dc=" + dc);*/
         }
     }
 
-    private class DccDefaultState extends State {
+    public class DccDefaultState extends State {
         @Override
         public void enter() {
             mPhone.mCi.registerForRilConnected(getHandler(),
                     DataConnection.EVENT_RIL_CONNECTED, null);
             mPhone.mCi.registerForDataNetworkStateChanged(getHandler(),
                     DataConnection.EVENT_DATA_STATE_CHANGED, null);
-            if (Build.IS_DEBUGGABLE) {
+            if (true) {
                 mDcTesterDeactivateAll =
                         new DcTesterDeactivateAll(mPhone, DcController.this, getHandler());
             }
@@ -149,11 +144,11 @@ class DcController extends StateMachine {
 
             switch (msg.what) {
                 case DataConnection.EVENT_RIL_CONNECTED:
-                    ar = (AsyncResult)msg.obj;
+                    ar = (AsyncResult) msg.obj;
                     if (ar.exception == null) {
                         if (DBG) {
                             log("DccDefaultState: msg.what=EVENT_RIL_CONNECTED mRilVersion=" +
-                                ar.result);
+                                    ar.result);
                         }
                     } else {
                         log("DccDefaultState: Unexpected exception on EVENT_RIL_CONNECTED");
@@ -161,12 +156,12 @@ class DcController extends StateMachine {
                     break;
 
                 case DataConnection.EVENT_DATA_STATE_CHANGED:
-                    ar = (AsyncResult)msg.obj;
+                    ar = (AsyncResult) msg.obj;
                     if (ar.exception == null) {
-                        onDataStateChanged((ArrayList<DataCallResponse>)ar.result);
+                        onDataStateChanged((ArrayList<DataCallResponse>) ar.result);
                     } else {
                         log("DccDefaultState: EVENT_DATA_STATE_CHANGED:" +
-                                    " exception; likely radio not available, ignore");
+                                " exception; likely radio not available, ignore");
                     }
                     break;
             }
@@ -175,10 +170,11 @@ class DcController extends StateMachine {
 
         /**
          * Process the new list of "known" Data Calls
+         *
          * @param dcsList as sent by RIL_UNSOL_DATA_CALL_LIST_CHANGED
          */
         private void onDataStateChanged(ArrayList<DataCallResponse> dcsList) {
-            if (DBG) {
+            /*if (DBG) {
                 lr("onDataStateChanged: dcsList=" + dcsList
                         + " mDcListActiveByCid=" + mDcListActiveByCid);
             }
@@ -249,7 +245,7 @@ class DcController extends StateMachine {
                                         ! result.oldLp.isIdenticalAddresses(result.newLp)) {
                                     // If the same address type was removed and
                                     // added we need to cleanup
-                                    CompareResult<LinkAddress> car =
+                                   CompareResult<LinkAddress> car =
                                         result.oldLp.compareAddresses(result.newLp);
                                     if (DBG) {
                                         log("onDataStateChanged: oldLp=" + result.oldLp +
@@ -311,56 +307,56 @@ class DcController extends StateMachine {
             }
 
             // Retry connections that have disappeared
-            for (DataConnection dc : dcsToRetry) {
+            for (DataConnection dce : dcsToRetry) {
                 if (DBG) log("onDataStateChanged: send EVENT_LOST_CONNECTION dc.mTag=" + dc.mTag);
                 dc.sendMessage(DataConnection.EVENT_LOST_CONNECTION, dc.mTag);
             }
 
             if (DBG) log("onDataStateChanged: X");
+        }*/
         }
-    }
 
-    /**
-     * lr is short name for logAndAddLogRec
-     * @param s
-     */
-    private void lr(String s) {
-        logAndAddLogRec(s);
-    }
-
-    @Override
-    protected void log(String s) {
-        Rlog.d(getName(), s);
-    }
-
-    @Override
-    protected void loge(String s) {
-        Rlog.e(getName(), s);
-    }
-
-    /**
-     * @return the string for msg.what as our info.
-     */
-    @Override
-    protected String getWhatToString(int what) {
-        String info = null;
-        info = DataConnection.cmdToString(what);
-        if (info == null) {
-            info = DcAsyncChannel.cmdToString(what);
+        /**
+         * lr is short name for logAndAddLogRec
+         *
+         * @param s
+         */
+        private void lr(String s) {
+     /*   logAndAddLogRec(s);*/
         }
-        return info;
-    }
 
-    @Override
-    public String toString() {
-        return "mDcListAll=" + mDcListAll + " mDcListActiveByCid=" + mDcListActiveByCid;
-    }
 
-    @Override
-    public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        super.dump(fd, pw, args);
-        pw.println(" mPhone=" + mPhone);
-        pw.println(" mDcListAll=" + mDcListAll);
-        pw.println(" mDcListActiveByCid=" + mDcListActiveByCid);
-    }
-}
+        protected void log(String s) {
+            Log.d(getName(), s);
+        }
+
+
+        protected void loge(String s) {
+            Log.e(getName(), s);
+        }
+
+        /**
+         * @return the string for msg.what as our info.
+         */
+        protected String getWhatToString(int what) {
+            String info = null;
+            info = DataConnection.cmdToString(what);
+            if (info == null) {
+                info = DcAsyncChannel.cmdToString(what);
+            }
+            return info;
+        }
+
+        @Override
+        public String toString() {
+            return "mDcListAll=" + mDcListAll + " mDcListActiveByCid=" + mDcListActiveByCid;
+        }
+
+
+        public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
+    /*    super.dump(fd, pw, args);*/
+            pw.println(" mPhone=" + mPhone);
+            pw.println(" mDcListAll=" + mDcListAll);
+            pw.println(" mDcListActiveByCid=" + mDcListActiveByCid);
+        }
+    }}

@@ -18,18 +18,16 @@ package io.a41dev.ril2.telephony.dataconnection;
 
 import android.app.PendingIntent;
 import android.content.Context;
-import android.net.NetworkConfig;
-import android.telephony.Rlog;
-
-import com.android.internal.R;
-import com.android.internal.telephony.DctConstants;
-import com.android.internal.telephony.Phone;
+import android.util.Log;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import io.a41dev.ril2.DctConstants;
+import io.a41dev.ril2.telephony.Phone;
 
 /**
  * Maintain the Apn context
@@ -48,7 +46,7 @@ public class ApnContext {
 
     private ArrayList<ApnSetting> mWaitingApns = null;
 
-    public final int priority;
+    public final int priority = 1000;
 
     /** A zero indicates that all waiting APNs had a permanent error */
     private AtomicInteger mWaitingApnsPermanentFailureCountDown;
@@ -71,15 +69,15 @@ public class ApnContext {
      */
     AtomicBoolean mDependencyMet;
 
-    public ApnContext(Context context, String apnType, String logTag, NetworkConfig config) {
+    public ApnContext(Context context, String apnType, String logTag/*, NetworkConfig config*/) {
         mContext = context;
         mApnType = apnType;
         mState = DctConstants.State.IDLE;
         setReason(Phone.REASON_DATA_ENABLED);
         mDataEnabled = new AtomicBoolean(false);
-        mDependencyMet = new AtomicBoolean(config.dependencyMet);
+      /*  mDependencyMet = new AtomicBoolean(config.dependencyMet);*/
         mWaitingApnsPermanentFailureCountDown = new AtomicInteger(0);
-        priority = config.priority;
+      /*  priority = config.priority;*/
         LOG_TAG = logTag;
     }
 
@@ -228,8 +226,7 @@ public class ApnContext {
     }
 
     public boolean isProvisioningApn() {
-        String provisioningApn = mContext.getResources()
-                .getString(R.string.mobile_provisioning_apn);
+        String provisioningApn = "internet.mtn.bj";
         if ((mApnSetting != null) && (mApnSetting.apn != null)) {
             return (mApnSetting.apn.equals(provisioningApn));
         } else {
@@ -247,7 +244,7 @@ public class ApnContext {
     }
 
     protected void log(String s) {
-        Rlog.d(LOG_TAG, "[ApnContext:" + mApnType + "] " + s);
+        Log.d(LOG_TAG, "[ApnContext:" + mApnType + "] " + s);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

@@ -16,10 +16,6 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.Phone;
-
 /**
  * Utilities that check if the phone supports specified capabilities.
  */
@@ -99,15 +95,16 @@ public class TelephonyCapabilities {
      * id is called "IMEI" on GSM phones and "MEID" on CDMA phones.
      */
     public static int getDeviceIdLabel(Phone phone) {
-        if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
+       /* if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             return com.android.internal.R.string.imei;
         } else if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             return com.android.internal.R.string.meid;
         } else {
-            Rlog.w(LOG_TAG, "getDeviceIdLabel: no known label for phone "
+            Log.w(LOG_TAG, "getDeviceIdLabel: no known label for phone "
                   + phone.getPhoneName());
             return 0;
-        }
+        }*/
+        return 0;
     }
 
     /**

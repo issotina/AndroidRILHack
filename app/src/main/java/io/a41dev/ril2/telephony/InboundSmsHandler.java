@@ -17,7 +17,6 @@
 package io.a41dev.ril2.telephony;
 
 import android.app.Activity;
-import android.app.AppOpsManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -28,25 +27,16 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
-import android.os.AsyncResult;
-import android.os.Build;
+import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
-import android.os.SystemProperties;
-import android.provider.Telephony;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.Rlog;
-import android.telephony.SmsMessage;
-import android.telephony.TelephonyManager;
-
-import com.android.internal.util.HexDump;
-import com.android.internal.util.State;
-import com.android.internal.util.StateMachine;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-import static android.telephony.TelephonyManager.PHONE_TYPE_CDMA;
+import io.a41dev.ril2.State;
+import io.a41dev.ril2.StateMachine;
 
 /**
  * This class broadcasts incoming SMS messages to interested apps after storing them in
@@ -122,21 +112,22 @@ public abstract class InboundSmsHandler extends StateMachine {
 
     /** URI for raw table of SMS provider. */
     private static final Uri sRawUri = Uri.withAppendedPath(Telephony.Sms.CONTENT_URI, "raw");
+    private static final Handler handler = null;
 
-    protected final Context mContext;
-    private final ContentResolver mResolver;
+    protected final Context mContext = null;
+    private final ContentResolver mResolver= null;
 
     /** Special handler for WAP push messages. */
-    private final WapPushOverSms mWapPush;
+    private final WapPushOverSms mWapPush = null;
 
     /** Wake lock to ensure device stays awake while dispatching the SMS intents. */
-    final PowerManager.WakeLock mWakeLock;
+    final PowerManager.WakeLock mWakeLock = null;
 
     /** DefaultState throws an exception or logs an error for unhandled message types. */
-    final DefaultState mDefaultState = new DefaultState();
+    /*private final StartupState mDefaultState = new StartupState();*/
 
     /** Startup state. Waiting for {@link SmsBroadcastUndelivered} to complete. */
-    final StartupState mStartupState = new StartupState();
+    //final StartupState mStartupState = new StartupState();
 
     /** Idle state. Waiting for messages to process. */
     final IdleState mIdleState = new IdleState();
@@ -150,7 +141,7 @@ public abstract class InboundSmsHandler extends StateMachine {
     /** Helper class to check whether storage is available for incoming messages. */
     protected SmsStorageMonitor mStorageMonitor;
 
-    private final boolean mSmsReceiveDisabled;
+    private final boolean mSmsReceiveDisabled = false;
 
     protected PhoneBase mPhone;
 
@@ -165,33 +156,35 @@ public abstract class InboundSmsHandler extends StateMachine {
      */
     protected InboundSmsHandler(String name, Context context, SmsStorageMonitor storageMonitor,
             PhoneBase phone, CellBroadcastHandler cellBroadcastHandler) {
-        super(name);
+        super(name, handler);
 
-        mContext = context;
+       /* mContext = context;*/
         mStorageMonitor = storageMonitor;
         mPhone = phone;
         mCellBroadcastHandler = cellBroadcastHandler;
-        mResolver = context.getContentResolver();
-        mWapPush = new WapPushOverSms(context);
+      /*  mResolver = context.getContentResolver();
+        mWapPush = new WapPushOverSms(context);*/
 
-        boolean smsCapable = mContext.getResources().getBoolean(
-                com.android.internal.R.bool.config_sms_capable);
-        mSmsReceiveDisabled = !SystemProperties.getBoolean(
-                TelephonyProperties.PROPERTY_SMS_RECEIVE, smsCapable);
+       /* boolean smsCapable = mContext.getResources().getBoolean(*//*
+                com.android.internal.R.bool.config_sms_capable);*/
+       /* mSmsReceiveDisabled = !SystemProperties.getBoolean(
+                TelephonyProperties.PROPERTY_SMS_RECEIVE, smsCapable);*/
 
         PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, name);
+     /*   mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, name);*/
         mWakeLock.acquire();    // wake lock released after we enter idle state
 
-        addState(mDefaultState);
-        addState(mStartupState, mDefaultState);
-        addState(mIdleState, mDefaultState);
-        addState(mDeliveringState, mDefaultState);
+        //addState(mDefaultState);
+      //  addState(mStartupState, mDefaultState);
+      /*  addState(mIdleState, mDefaultState);*/
+       /* addState(mDeliveringState, mDefaultState);*/
             addState(mWaitingState, mDeliveringState);
 
-        setInitialState(mStartupState);
+       // setInitialState(mStartupState);
         if (DBG) log("created InboundSmsHandler");
     }
+
+
 
     /**
      * Tell the state machine to quit after processing all messages.
@@ -233,7 +226,7 @@ public abstract class InboundSmsHandler extends StateMachine {
                 }
                 default: {
                     String errorText = "processMessage: unhandled message type " + msg.what;
-                    if (Build.IS_DEBUGGABLE) {
+                    if (false) {
                         throw new RuntimeException(errorText);
                     } else {
                         loge(errorText);
@@ -249,7 +242,7 @@ public abstract class InboundSmsHandler extends StateMachine {
      * The Startup state waits for {@link SmsBroadcastUndelivered} to process the raw table and
      * notify the state machine to broadcast any complete PDUs that might not have been broadcast.
      */
-    class StartupState extends State {
+    public class StartupState extends State {
         @Override
         public boolean processMessage(Message msg) {
             switch (msg.what) {
@@ -425,13 +418,13 @@ public abstract class InboundSmsHandler extends StateMachine {
             result = dispatchMessage(sms.mWrappedSmsMessage);
         } catch (RuntimeException ex) {
             loge("Exception dispatching message", ex);
-            result = Intents.RESULT_SMS_GENERIC_ERROR;
+            result = Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR;
         }
 
         // RESULT_OK means that the SMS will be acknowledged by special handling,
         // e.g. for SMS-PP data download. Any other result, we should ack here.
         if (result != Activity.RESULT_OK) {
-            boolean handled = (result == Intents.RESULT_SMS_HANDLED);
+            boolean handled = (result == Telephony.Sms.Intents.RESULT_SMS_HANDLED);
             notifyAndAcknowledgeLastIncomingSms(handled, result, null);
         }
     }
@@ -441,21 +434,21 @@ public abstract class InboundSmsHandler extends StateMachine {
      * 3GPP2-specific message types.
      *
      * @param smsb the SmsMessageBase object from the RIL
-     * @return a result code from {@link Intents},
+
      *  or {@link Activity#RESULT_OK} for delayed acknowledgment to SMSC
      */
     public int dispatchMessage(SmsMessageBase smsb) {
         // If sms is null, there was a parsing error.
         if (smsb == null) {
             loge("dispatchSmsMessage: message is null");
-            return Intents.RESULT_SMS_GENERIC_ERROR;
+            return Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR;
         }
 
         if (mSmsReceiveDisabled) {
             // Device doesn't support receiving SMS,
             log("Received short message on device which doesn't support "
                     + "receiving SMS. Ignored.");
-            return Intents.RESULT_SMS_HANDLED;
+            return Telephony.Sms.Intents.RESULT_SMS_HANDLED;
         }
 
         return dispatchMessageRadioSpecific(smsb);
@@ -467,7 +460,7 @@ public abstract class InboundSmsHandler extends StateMachine {
      * {@link #dispatchNormalMessage} from this class.
      *
      * @param smsb the SmsMessageBase object from the RIL
-     * @return a result code from {@link Intents},
+
      *  or {@link Activity#RESULT_OK} for delayed acknowledgment to SMSC
      */
     protected abstract int dispatchMessageRadioSpecific(SmsMessageBase smsb);
@@ -505,7 +498,7 @@ public abstract class InboundSmsHandler extends StateMachine {
             int result, Message response) {
         if (!success) {
             // broadcast SMS_REJECTED_ACTION intent
-            Intent intent = new Intent(Intents.SMS_REJECTED_ACTION);
+            Intent intent = new Intent(Telephony.Sms.Intents.SMS_REJECTED_ACTION);
             intent.putExtra("result", result);
             mContext.sendBroadcast(intent, android.Manifest.permission.RECEIVE_SMS);
         }
@@ -518,15 +511,7 @@ public abstract class InboundSmsHandler extends StateMachine {
      */
     protected abstract boolean is3gpp2();
 
-    /**
-     * Dispatch a normal incoming SMS. This is called from {@link #dispatchMessageRadioSpecific}
-     * if no format-specific handling was required. Saves the PDU to the SMS provider raw table,
-     * creates an {@link InboundSmsTracker}, then sends it to the state machine as an
-     * {@link #EVENT_BROADCAST_SMS}. Returns {@link Intents#RESULT_SMS_HANDLED} or an error value.
-     *
-     * @param sms the message to dispatch
-     * @return {@link Intents#RESULT_SMS_HANDLED} if the message was accepted, or an error status
-     */
+
     protected int dispatchNormalMessage(SmsMessageBase sms) {
         SmsHeader smsHeader = sms.getUserDataHeader();
         InboundSmsTracker tracker;
@@ -557,25 +542,19 @@ public abstract class InboundSmsHandler extends StateMachine {
         return addTrackerToRawTableAndSendMessage(tracker);
     }
 
-    /**
-     * Helper to add the tracker to the raw table and then send a message to broadcast it, if
-     * successful. Returns the SMS intent status to return to the SMSC.
-     * @param tracker the tracker to save to the raw table and then deliver
-     * @return {@link Intents#RESULT_SMS_HANDLED} or {@link Intents#RESULT_SMS_GENERIC_ERROR}
-     * or {@link Intents#RESULT_SMS_DUPLICATED}
-     */
+
     protected int addTrackerToRawTableAndSendMessage(InboundSmsTracker tracker) {
         switch(addTrackerToRawTable(tracker)) {
-        case Intents.RESULT_SMS_HANDLED:
+        case Telephony.Sms.Intents.RESULT_SMS_HANDLED:
             sendMessage(EVENT_BROADCAST_SMS, tracker);
-            return Intents.RESULT_SMS_HANDLED;
+            return Telephony.Sms.Intents.RESULT_SMS_HANDLED;
 
-        case Intents.RESULT_SMS_DUPLICATED:
-            return Intents.RESULT_SMS_HANDLED;
+        case Telephony.Sms.Intents.RESULT_SMS_DUPLICATED:
+            return Telephony.Sms.Intents.RESULT_SMS_HANDLED;
 
-        case Intents.RESULT_SMS_GENERIC_ERROR:
+        case Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR:
         default:
-            return Intents.RESULT_SMS_GENERIC_ERROR;
+            return Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR;
         }
     }
 
@@ -668,7 +647,7 @@ public abstract class InboundSmsHandler extends StateMachine {
 
         Intent intent;
         if (destPort == -1) {
-            intent = new Intent(Intents.SMS_DELIVER_ACTION);
+            intent = new Intent(Telephony.Sms.Intents.SMS_DELIVER_ACTION);
 
             // Direct the intent to only the default SMS app. If we can't find a default SMS app
             // then sent it to all broadcast receivers.
@@ -681,13 +660,13 @@ public abstract class InboundSmsHandler extends StateMachine {
             }
         } else {
             Uri uri = Uri.parse("sms://localhost:" + destPort);
-            intent = new Intent(Intents.DATA_SMS_RECEIVED_ACTION, uri);
+            intent = new Intent(Telephony.Sms.Intents.DATA_SMS_RECEIVED_ACTION, uri);
         }
 
         intent.putExtra("pdus", pdus);
         intent.putExtra("format", tracker.getFormat());
-        dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
-                AppOpsManager.OP_RECEIVE_SMS, resultReceiver);
+       /* dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
+                AppOpsManager.OP_RECEIVE_SMS, resultReceiver);*/
         return true;
     }
 
@@ -699,12 +678,12 @@ public abstract class InboundSmsHandler extends StateMachine {
      * @param permission receivers are required to have this permission
      * @param appOp app op that is being performed when dispatching to a receiver
      */
-    void dispatchIntent(Intent intent, String permission, int appOp,
+    /*void dispatchIntent(Intent intent, String permission, int appOp,
             BroadcastReceiver resultReceiver) {
         intent.addFlags(Intent.FLAG_RECEIVER_NO_ABORT);
         mContext.sendOrderedBroadcast(intent, permission, appOp, resultReceiver,
                 getHandler(), Activity.RESULT_OK, null, null);
-    }
+    }*/
 
     /**
      * Helper for {@link SmsBroadcastUndelivered} to delete an old message in the raw table.
@@ -763,12 +742,12 @@ public abstract class InboundSmsHandler extends StateMachine {
                         loge("Warning: dup message segment PDU of length " + pdu.length
                                 + " is different from existing PDU of length " + oldPdu.length);
                     }
-                    return Intents.RESULT_SMS_DUPLICATED;   // reject message
+                    return Telephony.Sms.Intents.RESULT_SMS_DUPLICATED;   // reject message
                 }
                 cursor.close();
             } catch (SQLException e) {
                 loge("Can't access multipart SMS database", e);
-                return Intents.RESULT_SMS_GENERIC_ERROR;    // reject message
+                return Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR;    // reject message
             } finally {
                 if (cursor != null) {
                     cursor.close();
@@ -788,10 +767,10 @@ public abstract class InboundSmsHandler extends StateMachine {
                 // set the delete selection args for single-part message
                 tracker.setDeleteWhere(SELECT_BY_ID, new String[]{Long.toString(rowId)});
             }
-            return Intents.RESULT_SMS_HANDLED;
+            return Telephony.Sms.Intents.RESULT_SMS_HANDLED;
         } catch (Exception e) {
             loge("error parsing URI for new row: " + newUri, e);
-            return Intents.RESULT_SMS_GENERIC_ERROR;
+            return Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR;
         }
     }
 
@@ -800,8 +779,8 @@ public abstract class InboundSmsHandler extends StateMachine {
      * @return true if the radio technology uses 3GPP2 format by default, false for 3GPP format
      */
     static boolean isCurrentFormat3gpp2() {
-        int activePhone = TelephonyManager.getDefault().getCurrentPhoneType();
-        return (PHONE_TYPE_CDMA == activePhone);
+        int activePhone/* = Phone.PHONE_TYPE_GSM*/;
+        return true;
     }
 
     /**
@@ -822,28 +801,28 @@ public abstract class InboundSmsHandler extends StateMachine {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(Intents.SMS_DELIVER_ACTION)) {
+            if (action.equals(Telephony.Sms.Intents.SMS_DELIVER_ACTION)) {
                 // Now dispatch the notification only intent
-                intent.setAction(Intents.SMS_RECEIVED_ACTION);
+                intent.setAction(Telephony.Sms.Intents.SMS_RECEIVED_ACTION);
                 intent.setComponent(null);
-                dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
-                        AppOpsManager.OP_RECEIVE_SMS, this);
-            } else if (action.equals(Intents.WAP_PUSH_DELIVER_ACTION)) {
+            /*    dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
+                        AppOpsManager.OP_RECEIVE_SMS, this);*/
+            } else if (action.equals(Telephony.Sms.Intents.WAP_PUSH_DELIVER_ACTION)) {
                 // Now dispatch the notification only intent
-                intent.setAction(Intents.WAP_PUSH_RECEIVED_ACTION);
+                intent.setAction(Telephony.Sms.Intents.WAP_PUSH_RECEIVED_ACTION);
                 intent.setComponent(null);
-                dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
-                        AppOpsManager.OP_RECEIVE_SMS, this);
+             /*   dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
+                        AppOpsManager.OP_RECEIVE_SMS, this);*/
             } else {
                 // Now that the intents have been deleted we can clean up the PDU data.
-                if (!Intents.DATA_SMS_RECEIVED_ACTION.equals(action)
-                        && !Intents.DATA_SMS_RECEIVED_ACTION.equals(action)
-                        && !Intents.WAP_PUSH_RECEIVED_ACTION.equals(action)) {
+                if (!Telephony.Sms.Intents.DATA_SMS_RECEIVED_ACTION.equals(action)
+                        && !Telephony.Sms.Intents.DATA_SMS_RECEIVED_ACTION.equals(action)
+                        && !Telephony.Sms.Intents.WAP_PUSH_RECEIVED_ACTION.equals(action)) {
                     loge("unexpected BroadcastReceiver action: " + action);
                 }
 
                 int rc = getResultCode();
-                if ((rc != Activity.RESULT_OK) && (rc != Intents.RESULT_SMS_HANDLED)) {
+                if ((rc != Activity.RESULT_OK) && (rc != Telephony.Sms.Intents.RESULT_SMS_HANDLED)) {
                     loge("a broadcast receiver set the result code to " + rc
                             + ", deleting from raw table anyway!");
                 } else if (DBG) {
@@ -867,18 +846,18 @@ public abstract class InboundSmsHandler extends StateMachine {
      * Log with debug level.
      * @param s the string to log
      */
-    @Override
+
     protected void log(String s) {
-        Rlog.d(getName(), s);
+        Log.d(getName(), s);
     }
 
     /**
      * Log with error level.
      * @param s the string to log
      */
-    @Override
+
     protected void loge(String s) {
-        Rlog.e(getName(), s);
+        Log.e(getName(), s);
     }
 
     /**
@@ -886,8 +865,7 @@ public abstract class InboundSmsHandler extends StateMachine {
      * @param s the string to log
      * @param e is a Throwable which logs additional information.
      */
-    @Override
     protected void loge(String s, Throwable e) {
-        Rlog.e(getName(), s, e);
+        Log.e(getName(), s, e);
     }
 }

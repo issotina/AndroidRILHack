@@ -27,7 +27,7 @@ abstract class ValueObject {
  * Class for Command Details object of proactive commands from SIM.
  * {@hide}
  */
-class CommandDetails extends ValueObject implements Parcelable {
+public class CommandDetails extends ValueObject implements Parcelable {
     public boolean compRequired;
     public int commandNumber;
     public int typeOfCommand;
@@ -38,7 +38,7 @@ class CommandDetails extends ValueObject implements Parcelable {
         return ComprehensionTlvTag.COMMAND_DETAILS;
     }
 
-    CommandDetails() {
+    public CommandDetails() {
     }
 
     public boolean compareTo(CommandDetails other) {

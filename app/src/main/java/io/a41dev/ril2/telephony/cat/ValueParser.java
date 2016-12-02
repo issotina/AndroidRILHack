@@ -16,15 +16,16 @@
 
 package io.a41dev.ril2.telephony.cat;
 
-import com.android.internal.telephony.GsmAlphabet;
-import com.android.internal.telephony.cat.Duration.TimeUnit;
-import com.android.internal.telephony.uicc.IccUtils;
-
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+
+import io.a41dev.ril2.telephony.GsmAlphabet;
+import io.a41dev.ril2.telephony.cat.Duration.TimeUnit;
+import io.a41dev.ril2.telephony.uicc.IccUtils;
 
 abstract class ValueParser {
 
@@ -299,8 +300,8 @@ abstract class ValueParser {
             boolean noAlphaUsrCnf = false;
             Resources resource = Resources.getSystem();
             try {
-                noAlphaUsrCnf = resource.getBoolean(
-                        com.android.internal.R.bool.config_stkNoAlphaUsrCnf);
+                noAlphaUsrCnf = /*resource.getBoolean(
+                        com.android.internal.R.bool.config_stkNoAlphaUsrCnf)*/ true;
             } catch (NotFoundException e) {
                 noAlphaUsrCnf = false;
             }

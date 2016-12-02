@@ -17,19 +17,20 @@
 package io.a41dev.ril2.telephony.gsm;
 
 import android.app.Activity;
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Telephony.Sms.Intents;
 import android.telephony.PhoneNumberUtils;
-import android.telephony.Rlog;
 import android.telephony.SmsManager;
+import android.util.Log;
 
-import com.android.internal.telephony.CommandsInterface;
-import com.android.internal.telephony.cat.ComprehensionTlvTag;
-import com.android.internal.telephony.uicc.IccIoResult;
-import com.android.internal.telephony.uicc.IccUtils;
-import com.android.internal.telephony.uicc.UsimServiceTable;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.cat.ComprehensionTlvTag;
+import io.a41dev.ril2.telephony.uicc.IccIoResult;
+import io.a41dev.ril2.telephony.uicc.IccUtils;
+import io.a41dev.ril2.telephony.uicc.UsimServiceTable;
+
 
 /**
  * Handler for SMS-PP data download messages.
@@ -79,10 +80,10 @@ public class UsimDataDownloadHandler extends Handler {
         // records have been loaded, after the USIM service table has been loaded.
         if (ust != null && ust.isAvailable(
                 UsimServiceTable.UsimService.DATA_DL_VIA_SMS_PP)) {
-            Rlog.d(TAG, "Received SMS-PP data download, sending to UICC.");
+            Log.d(TAG, "Received SMS-PP data download, sending to UICC.");
             return startDataDownload(smsMessage);
         } else {
-            Rlog.d(TAG, "DATA_DL_VIA_SMS_PP service not available, storing message to UICC.");
+            Log.d(TAG, "DATA_DL_VIA_SMS_PP service not available, storing message to UICC.");
             String smsc = IccUtils.bytesToHexString(
                     PhoneNumberUtils.networkPortionToCalledPartyBCDWithLength(
                             smsMessage.getServiceCenterAddress()));
@@ -105,8 +106,8 @@ public class UsimDataDownloadHandler extends Handler {
         if (sendMessage(obtainMessage(EVENT_START_DATA_DOWNLOAD, smsMessage))) {
             return Activity.RESULT_OK;  // we will send SMS ACK/ERROR based on UICC response
         } else {
-            Rlog.e(TAG, "startDataDownload failed to send message to start data download.");
-            return Intents.RESULT_SMS_GENERIC_ERROR;
+            Log.e(TAG, "startDataDownload failed to send message to start data download.");
+            return Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR;
         }
     }
 
@@ -160,7 +161,7 @@ public class UsimDataDownloadHandler extends Handler {
 
         // Verify that we calculated the payload size correctly.
         if (index != envelope.length) {
-            Rlog.e(TAG, "startDataDownload() calculated incorrect envelope length, aborting.");
+            Log.e(TAG, "startDataDownload() calculated incorrect envelope length, aborting.");
             acknowledgeSmsWithError(CommandsInterface.GSM_SMS_FAIL_CAUSE_UNSPECIFIED_ERROR);
             return;
         }
@@ -202,17 +203,17 @@ public class UsimDataDownloadHandler extends Handler {
 
         boolean success;
         if ((sw1 == 0x90 && sw2 == 0x00) || sw1 == 0x91) {
-            Rlog.d(TAG, "USIM data download succeeded: " + response.toString());
+            Log.d(TAG, "USIM data download succeeded: " + response.toString());
             success = true;
         } else if (sw1 == 0x93 && sw2 == 0x00) {
-            Rlog.e(TAG, "USIM data download failed: Toolkit busy");
+            Log.e(TAG, "USIM data download failed: Toolkit busy");
             acknowledgeSmsWithError(CommandsInterface.GSM_SMS_FAIL_CAUSE_USIM_APP_TOOLKIT_BUSY);
             return;
         } else if (sw1 == 0x62 || sw1 == 0x63) {
-            Rlog.e(TAG, "USIM data download failed: " + response.toString());
+            Log.e(TAG, "USIM data download failed: " + response.toString());
             success = false;
         } else {
-            Rlog.e(TAG, "Unexpected SW1/SW2 response from UICC: " + response.toString());
+            Log.e(TAG, "Unexpected SW1/SW2 response from UICC: " + response.toString());
             success = false;
         }
 
@@ -290,7 +291,7 @@ public class UsimDataDownloadHandler extends Handler {
                 ar = (AsyncResult) msg.obj;
 
                 if (ar.exception != null) {
-                    Rlog.e(TAG, "UICC Send Envelope failure, exception: " + ar.exception);
+                    Log.e(TAG, "UICC Send Envelope failure, exception: " + ar.exception);
                     acknowledgeSmsWithError(
                             CommandsInterface.GSM_SMS_FAIL_CAUSE_USIM_DATA_DOWNLOAD_ERROR);
                     return;
@@ -303,17 +304,17 @@ public class UsimDataDownloadHandler extends Handler {
             case EVENT_WRITE_SMS_COMPLETE:
                 ar = (AsyncResult) msg.obj;
                 if (ar.exception == null) {
-                    Rlog.d(TAG, "Successfully wrote SMS-PP message to UICC");
+                    Log.d(TAG, "Successfully wrote SMS-PP message to UICC");
                     mCi.acknowledgeLastIncomingGsmSms(true, 0, null);
                 } else {
-                    Rlog.d(TAG, "Failed to write SMS-PP message to UICC", ar.exception);
+                    Log.d(TAG, "Failed to write SMS-PP message to UICC", ar.exception);
                     mCi.acknowledgeLastIncomingGsmSms(false,
                             CommandsInterface.GSM_SMS_FAIL_CAUSE_UNSPECIFIED_ERROR, null);
                 }
                 break;
 
             default:
-                Rlog.e(TAG, "Ignoring unexpected message, what=" + msg.what);
+                Log.e(TAG, "Ignoring unexpected message, what=" + msg.what);
         }
     }
 }

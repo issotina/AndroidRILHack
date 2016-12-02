@@ -16,27 +16,22 @@
 
 package io.a41dev.ril2.telephony.dataconnection;
 
-import com.android.internal.telephony.dataconnection.DataConnection.ConnectionParams;
-import com.android.internal.telephony.dataconnection.DataConnection.DisconnectParams;
-import com.android.internal.util.AsyncChannel;
-import com.android.internal.util.Protocol;
-
-import android.net.LinkCapabilities;
-import android.net.LinkProperties;
-import android.net.ProxyProperties;
 import android.os.Message;
+
+import io.a41dev.ril2.telephony.sip.LinkCapabilities;
+import io.a41dev.ril2.telephony.sip.LinkProperties;
 
 /**
  * AsyncChannel to a DataConnection
  */
-public class DcAsyncChannel extends AsyncChannel {
+public class DcAsyncChannel/* extends AsyncChannel*/ {
     private static final boolean DBG = false;
     private String mLogTag;
 
     private DataConnection mDc;
     private long mDcThreadId;
 
-    public static final int BASE = Protocol.BASE_DATA_CONNECTION_AC;
+    public static final int BASE =0x00041000;
 
     public static final int REQ_IS_INACTIVE = BASE + 0;
     public static final int RSP_IS_INACTIVE = BASE + 1;
@@ -86,8 +81,9 @@ public class DcAsyncChannel extends AsyncChannel {
         if ((cmd >= 0) && (cmd < sCmdToString.length)) {
             return sCmdToString[cmd];
         } else {
-            return AsyncChannel.cmdToString(cmd + BASE);
+         /*   return AsyncChannel.cmdToString(cmd + BASE);*/
         }
+        return "";
     }
 
     /**
@@ -121,7 +117,7 @@ public class DcAsyncChannel extends AsyncChannel {
      * Response {@link #rspIsInactive}
      */
     public void reqIsInactive() {
-        sendMessage(REQ_IS_INACTIVE);
+       /* sendMessage(REQ_IS_INACTIVE);*/
         if (DBG) log("reqIsInactive");
     }
 
@@ -143,7 +139,7 @@ public class DcAsyncChannel extends AsyncChannel {
     public boolean isInactiveSync() {
         boolean value;
         if (isCallerOnDifferentThread()) {
-            Message response = sendMessageSynchronously(REQ_IS_INACTIVE);
+            Message response =/* sendMessageSynchronously(REQ_IS_INACTIVE)*/  null;
             if ((response != null) && (response.what == RSP_IS_INACTIVE)) {
                 value = rspIsInactive(response);
             } else {
@@ -161,7 +157,7 @@ public class DcAsyncChannel extends AsyncChannel {
      * Response {@link #rspCid}
      */
     public void reqCid() {
-        sendMessage(REQ_GET_CID);
+       /* sendMessage(REQ_GET_CID);*/
         if (DBG) log("reqCid");
     }
 
@@ -183,7 +179,7 @@ public class DcAsyncChannel extends AsyncChannel {
     public int getCidSync() {
         int value;
         if (isCallerOnDifferentThread()) {
-            Message response = sendMessageSynchronously(REQ_GET_CID);
+            Message response = /*sendMessageSynchronously(REQ_GET_CID)*/ null;
             if ((response != null) && (response.what == RSP_GET_CID)) {
                 value = rspCid(response);
             } else {
@@ -201,7 +197,7 @@ public class DcAsyncChannel extends AsyncChannel {
      * Response {@link #rspApnSetting}
      */
     public void reqApnSetting() {
-        sendMessage(REQ_GET_APNSETTING);
+       /* sendMessage(REQ_GET_APNSETTING);*/
         if (DBG) log("reqApnSetting");
     }
 
@@ -225,7 +221,7 @@ public class DcAsyncChannel extends AsyncChannel {
     public ApnSetting getApnSettingSync() {
         ApnSetting value;
         if (isCallerOnDifferentThread()) {
-            Message response = sendMessageSynchronously(REQ_GET_APNSETTING);
+            Message response = /*sendMessageSynchronously(REQ_GET_APNSETTING)*/null;
             if ((response != null) && (response.what == RSP_GET_APNSETTING)) {
                 value = rspApnSetting(response);
             } else {
@@ -243,7 +239,7 @@ public class DcAsyncChannel extends AsyncChannel {
      * Response {@link #rspLinkProperties}
      */
     public void reqLinkProperties() {
-        sendMessage(REQ_GET_LINK_PROPERTIES);
+      /*  sendMessage(REQ_GET_LINK_PROPERTIES);*/
         if (DBG) log("reqLinkProperties");
     }
 
@@ -267,7 +263,7 @@ public class DcAsyncChannel extends AsyncChannel {
     public LinkProperties getLinkPropertiesSync() {
         LinkProperties value;
         if (isCallerOnDifferentThread()) {
-            Message response = sendMessageSynchronously(REQ_GET_LINK_PROPERTIES);
+            Message response =/* sendMessageSynchronously(REQ_GET_LINK_PROPERTIES)*/null;
             if ((response != null) && (response.what == RSP_GET_LINK_PROPERTIES)) {
                 value = rspLinkProperties(response);
             } else {
@@ -284,36 +280,11 @@ public class DcAsyncChannel extends AsyncChannel {
      * Request setting the connections LinkProperties.HttpProxy.
      * Response RSP_SET_LINK_PROPERTIES when complete.
      */
-    public void reqSetLinkPropertiesHttpProxy(ProxyProperties proxy) {
-        sendMessage(REQ_SET_LINK_PROPERTIES_HTTP_PROXY, proxy);
-        if (DBG) log("reqSetLinkPropertiesHttpProxy proxy=" + proxy);
-    }
+
 
     /**
      * Set the connections LinkProperties.HttpProxy
      */
-    public void setLinkPropertiesHttpProxySync(ProxyProperties proxy) {
-        if (isCallerOnDifferentThread()) {
-            Message response =
-                sendMessageSynchronously(REQ_SET_LINK_PROPERTIES_HTTP_PROXY, proxy);
-            if ((response != null) && (response.what == RSP_SET_LINK_PROPERTIES_HTTP_PROXY)) {
-                if (DBG) log("setLinkPropertiesHttpPoxy ok");
-            } else {
-                log("setLinkPropertiesHttpPoxy error response=" + response);
-            }
-        } else {
-            mDc.setLinkPropertiesHttpProxy(proxy);
-        }
-    }
-
-    /**
-     * Request the connections LinkCapabilities.
-     * Response {@link #rspLinkCapabilities}
-     */
-    public void reqLinkCapabilities() {
-        sendMessage(REQ_GET_LINK_CAPABILITIES);
-        if (DBG) log("reqLinkCapabilities");
-    }
 
     /**
      * Evaluate RSP_GET_LINK_CAPABILITIES
@@ -335,7 +306,7 @@ public class DcAsyncChannel extends AsyncChannel {
     public LinkCapabilities getLinkCapabilitiesSync() {
         LinkCapabilities value;
         if (isCallerOnDifferentThread()) {
-            Message response = sendMessageSynchronously(REQ_GET_LINK_CAPABILITIES);
+            Message response = /*sendMessageSynchronously(REQ_GET_LINK_CAPABILITIES)*/ null;
             if ((response != null) && (response.what == RSP_GET_LINK_CAPABILITIES)) {
                 value = rspLinkCapabilities(response);
             } else {
@@ -352,7 +323,7 @@ public class DcAsyncChannel extends AsyncChannel {
      * Response RSP_RESET when complete
      */
     public void reqReset() {
-        sendMessage(REQ_RESET);
+       /* sendMessage(REQ_RESET);*/
         if (DBG) log("reqReset");
     }
 
@@ -374,9 +345,9 @@ public class DcAsyncChannel extends AsyncChannel {
             log("bringUp: apnContext=" + apnContext + " initialMaxRetry=" + initialMaxRetry
                 + " onCompletedMsg=" + onCompletedMsg);
         }
-        sendMessage(DataConnection.EVENT_CONNECT,
+      /*  sendMessage(DataConnection.EVENT_CONNECT,
                     new ConnectionParams(apnContext, initialMaxRetry, profileId,
-                            rilRadioTechnology, onCompletedMsg));
+                            rilRadioTechnology, onCompletedMsg));*/
     }
 
     /**
@@ -390,8 +361,8 @@ public class DcAsyncChannel extends AsyncChannel {
             log("tearDown: apnContext=" + apnContext
                     + " reason=" + reason + " onCompletedMsg=" + onCompletedMsg);
         }
-        sendMessage(DataConnection.EVENT_DISCONNECT,
-                        new DisconnectParams(apnContext, reason, onCompletedMsg));
+    /*    sendMessage(DataConnection.EVENT_DISCONNECT,
+                        new DisconnectParams(apnContext, reason, onCompletedMsg));*/
     }
 
     /**
@@ -403,8 +374,8 @@ public class DcAsyncChannel extends AsyncChannel {
      */
     public void tearDownAll(String reason, Message onCompletedMsg) {
         if (DBG) log("tearDownAll: reason=" + reason + " onCompletedMsg=" + onCompletedMsg);
-        sendMessage(DataConnection.EVENT_DISCONNECT_ALL,
-                new DisconnectParams(null, reason, onCompletedMsg));
+     /*   sendMessage(DataConnection.EVENT_DISCONNECT_ALL,
+                new DisconnectParams(null, reason, onCompletedMsg));*/
     }
 
     /**
@@ -428,6 +399,6 @@ public class DcAsyncChannel extends AsyncChannel {
     }
 
     private void log(String s) {
-        android.telephony.Rlog.d(mLogTag, "DataConnectionAc " + s);
+       /* android.telephony.Log.d(mLogTag, "DataConnectionAc " + s);*/
     }
 }

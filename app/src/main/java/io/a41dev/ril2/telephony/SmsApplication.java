@@ -17,24 +17,16 @@
 package io.a41dev.ril2.telephony;
 
 import android.Manifest.permission;
-import android.app.AppOpsManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.Resources;
 import android.net.Uri;
-import android.provider.Settings;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.Rlog;
 import android.telephony.TelephonyManager;
-import com.android.internal.content.PackageMonitor;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -132,7 +124,7 @@ public final class SmsApplication {
         PackageManager packageManager = context.getPackageManager();
 
         // Get the list of apps registered for SMS
-        Intent intent = new Intent(Intents.SMS_DELIVER_ACTION);
+        Intent intent = new Intent(Telephony.Sms.Intents.SMS_DELIVER_ACTION);
         List<ResolveInfo> smsReceivers = packageManager.queryBroadcastReceivers(intent, 0);
 
         HashMap<String, SmsApplicationData> receivers = new HashMap<String, SmsApplicationData>();
@@ -157,7 +149,7 @@ public final class SmsApplication {
         }
 
         // Update any existing entries with mms receiver class
-        intent = new Intent(Intents.WAP_PUSH_DELIVER_ACTION);
+        intent = new Intent(Telephony.Sms.Intents.WAP_PUSH_DELIVER_ACTION);
         intent.setDataAndType(null, "application/vnd.wap.mms-message");
         List<ResolveInfo> mmsReceivers = packageManager.queryBroadcastReceivers(intent, 0);
         for (ResolveInfo resolveInfo : mmsReceivers) {
@@ -176,17 +168,17 @@ public final class SmsApplication {
         }
 
         // Update any existing entries with respond via message intent class.
-        intent = new Intent(TelephonyManager.ACTION_RESPOND_VIA_MESSAGE,
-                Uri.fromParts(SCHEME_SMSTO, "", null));
+ /*       intent = new Intent(TelephonyManager.ACTION_RESPOND_VIA_MESSAGE,
+                Uri.fromParts(SCHEME_SMSTO, "", null));*/
         List<ResolveInfo> respondServices = packageManager.queryIntentServices(intent, 0);
         for (ResolveInfo resolveInfo : respondServices) {
             final ServiceInfo serviceInfo = resolveInfo.serviceInfo;
             if (serviceInfo == null) {
                 continue;
             }
-            if (!permission.SEND_RESPOND_VIA_MESSAGE.equals(serviceInfo.permission)) {
+           /* if (!permission.SEND_RESPOND_VIA_MESSAGE.equals(serviceInfo.permission)) {
                 continue;
-            }
+            }*/
             final String packageName = serviceInfo.packageName;
             final SmsApplicationData smsApplicationData = receivers.get(packageName);
             if (smsApplicationData != null) {
@@ -264,16 +256,16 @@ public final class SmsApplication {
         Collection<SmsApplicationData> applications = getApplicationCollection(context);
 
         // Determine which application receives the broadcast
-        String defaultApplication = Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.SMS_DEFAULT_APPLICATION);
-
+       /* String defaultApplication = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.SMS_DEFAULT_APPLICATION);*/
+/*
         SmsApplicationData applicationData = null;
         if (defaultApplication != null) {
             applicationData = getApplicationForPackage(applications, defaultApplication);
-        }
+        }*/
         // Picking a new SMS app requires AppOps and Settings.Secure permissions, so we only do
         // this if the caller asked us to.
-        if (updateIfNeeded && applicationData == null) {
+       /* if (updateIfNeeded && applicationData == null) {
             // Try to find the default SMS package for this device
             Resources r = context.getResources();
             String defaultPackage =
@@ -291,10 +283,10 @@ public final class SmsApplication {
             if (applicationData != null) {
                 setDefaultApplication(applicationData.mPackageName, context);
             }
-        }
+        }*/
 
         // If we found a package, make sure AppOps permissions are set up correctly
-        if (applicationData != null) {
+        /*if (applicationData != null) {
             AppOpsManager appOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
 
             // We can only call checkOp if we are privileged (updateIfNeeded) or if the app we
@@ -306,7 +298,7 @@ public final class SmsApplication {
                 int mode = appOps.checkOp(AppOpsManager.OP_WRITE_SMS, applicationData.mUid,
                         applicationData.mPackageName);
                 if (mode != AppOpsManager.MODE_ALLOWED) {
-                    Rlog.e(LOG_TAG, applicationData.mPackageName + " lost OP_WRITE_SMS: " +
+                    Log.e(LOG_TAG, applicationData.mPackageName + " lost OP_WRITE_SMS: " +
                             (updateIfNeeded ? " (fixing)" : " (no permission to fix)"));
                     if (updateIfNeeded) {
                         appOps.setMode(AppOpsManager.OP_WRITE_SMS, applicationData.mUid,
@@ -317,8 +309,8 @@ public final class SmsApplication {
                     }
                 }
             }
-
-            // We can only verify the phone and BT app's permissions from a privileged caller
+*/
+         /*   // We can only verify the phone and BT app's permissions from a privileged caller
             if (updateIfNeeded) {
                 // Ensure this component is still configured as the preferred activity. Usually the
                 // current SMS app will already be the preferred activity - but checking whether or
@@ -334,13 +326,13 @@ public final class SmsApplication {
                     int mode = appOps.checkOp(AppOpsManager.OP_WRITE_SMS, info.applicationInfo.uid,
                             PHONE_PACKAGE_NAME);
                     if (mode != AppOpsManager.MODE_ALLOWED) {
-                        Rlog.e(LOG_TAG, PHONE_PACKAGE_NAME + " lost OP_WRITE_SMS:  (fixing)");
+                        Log.e(LOG_TAG, PHONE_PACKAGE_NAME + " lost OP_WRITE_SMS:  (fixing)");
                         appOps.setMode(AppOpsManager.OP_WRITE_SMS, info.applicationInfo.uid,
                                 PHONE_PACKAGE_NAME, AppOpsManager.MODE_ALLOWED);
                     }
                 } catch (NameNotFoundException e) {
                     // No phone app on this device (unexpected, even for non-phone devices)
-                    Rlog.e(LOG_TAG, "Phone package not found: " + PHONE_PACKAGE_NAME);
+                    Log.e(LOG_TAG, "Phone package not found: " + PHONE_PACKAGE_NAME);
                     applicationData = null;
                 }
 
@@ -349,17 +341,17 @@ public final class SmsApplication {
                     int mode = appOps.checkOp(AppOpsManager.OP_WRITE_SMS, info.applicationInfo.uid,
                             BLUETOOTH_PACKAGE_NAME);
                     if (mode != AppOpsManager.MODE_ALLOWED) {
-                        Rlog.e(LOG_TAG, BLUETOOTH_PACKAGE_NAME + " lost OP_WRITE_SMS:  (fixing)");
+                        Log.e(LOG_TAG, BLUETOOTH_PACKAGE_NAME + " lost OP_WRITE_SMS:  (fixing)");
                         appOps.setMode(AppOpsManager.OP_WRITE_SMS, info.applicationInfo.uid,
                                 BLUETOOTH_PACKAGE_NAME, AppOpsManager.MODE_ALLOWED);
                     }
                 } catch (NameNotFoundException e) {
                     // No BT app on this device
-                    Rlog.e(LOG_TAG, "Bluetooth package not found: " + BLUETOOTH_PACKAGE_NAME);
+                    Log.e(LOG_TAG, "Bluetooth package not found: " + BLUETOOTH_PACKAGE_NAME);
                 }
             }
-        }
-        return applicationData;
+        }*/
+        return null;
     }
 
     /**
@@ -373,20 +365,20 @@ public final class SmsApplication {
             return;
         }
 
-        // Get old package name
+     /*   // Get old package name
         String oldPackageName = Settings.Secure.getString(context.getContentResolver(),
                 Settings.Secure.SMS_DEFAULT_APPLICATION);
 
         if (packageName != null && oldPackageName != null && packageName.equals(oldPackageName)) {
             // No change
             return;
-        }
+        }*/
 
         // We only make the change if the new package is valid
         PackageManager packageManager = context.getPackageManager();
         Collection<SmsApplicationData> applications = getApplicationCollection(context);
         SmsApplicationData applicationData = getApplicationForPackage(applications, packageName);
-        if (applicationData != null) {
+        /*if (applicationData != null) {
             // Ignore OP_WRITE_SMS for the previously configured default SMS app.
             AppOpsManager appOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
             if (oldPackageName != null) {
@@ -396,7 +388,7 @@ public final class SmsApplication {
                     appOps.setMode(AppOpsManager.OP_WRITE_SMS, info.applicationInfo.uid,
                             oldPackageName, AppOpsManager.MODE_IGNORED);
                 } catch (NameNotFoundException e) {
-                    Rlog.w(LOG_TAG, "Old SMS package not found: " + oldPackageName);
+                    Log.w(LOG_TAG, "Old SMS package not found: " + oldPackageName);
                 }
             }
 
@@ -419,7 +411,7 @@ public final class SmsApplication {
                         PHONE_PACKAGE_NAME, AppOpsManager.MODE_ALLOWED);
             } catch (NameNotFoundException e) {
                 // No phone app on this device (unexpected, even for non-phone devices)
-                Rlog.e(LOG_TAG, "Phone package not found: " + PHONE_PACKAGE_NAME);
+                Log.e(LOG_TAG, "Phone package not found: " + PHONE_PACKAGE_NAME);
             }
 
             // BT needs to always have this permission to write to the sms database
@@ -429,16 +421,16 @@ public final class SmsApplication {
                         BLUETOOTH_PACKAGE_NAME, AppOpsManager.MODE_ALLOWED);
             } catch (NameNotFoundException e) {
                 // No BT app on this device
-                Rlog.e(LOG_TAG, "Bluetooth package not found: " + BLUETOOTH_PACKAGE_NAME);
+                Log.e(LOG_TAG, "Bluetooth package not found: " + BLUETOOTH_PACKAGE_NAME);
             }
-        }
+        }*/
     }
 
     /**
      * Tracks package changes and ensures that the default SMS app is always configured to be the
      * preferred activity for SENDTO sms/mms intents.
      */
-    private static final class SmsPackageMonitor extends PackageMonitor {
+    private static final class SmsPackageMonitor  {
         final Context mContext;
 
         public SmsPackageMonitor(Context context) {
@@ -446,20 +438,6 @@ public final class SmsApplication {
             mContext = context;
         }
 
-        @Override
-        public void onPackageDisappeared(String packageName, int reason) {
-            onPackageChanged(packageName);
-        }
-
-        @Override
-        public void onPackageAppeared(String packageName, int reason) {
-            onPackageChanged(packageName);
-        }
-
-        @Override
-        public void onPackageModified(String packageName) {
-            onPackageChanged(packageName);
-        }
 
         private void onPackageChanged(String packageName) {
             PackageManager packageManager = mContext.getPackageManager();
@@ -473,7 +451,7 @@ public final class SmsApplication {
 
     public static void initSmsPackageMonitor(Context context) {
         sSmsPackageMonitor = new SmsPackageMonitor(context);
-        sSmsPackageMonitor.register(context, context.getMainLooper(), false);
+       // sSmsPackageMonitor.register(context, context.getMainLooper(), false);
     }
 
     private static void configurePreferredActivity(PackageManager packageManager,
@@ -508,9 +486,9 @@ public final class SmsApplication {
         intentFilter.addAction(Intent.ACTION_SENDTO);
         intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
         intentFilter.addDataScheme(scheme);
-        packageManager.replacePreferredActivity(intentFilter,
+       /* packageManager.replacePreferredActivity(intentFilter,
                 IntentFilter.MATCH_CATEGORY_SCHEME + IntentFilter.MATCH_ADJUSTMENT_NORMAL,
-                set, componentName);
+                set, componentName);*/
     }
 
     /**

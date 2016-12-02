@@ -17,27 +17,7 @@
 package io.a41dev.ril2.telephony.cdma;
 
 import android.os.Parcel;
-import android.os.SystemProperties;
-import android.telephony.PhoneNumberUtils;
-import android.telephony.SmsCbLocation;
-import android.telephony.SmsCbMessage;
-import android.telephony.cdma.CdmaSmsCbProgramData;
-import android.telephony.Rlog;
 import android.util.Log;
-
-import com.android.internal.telephony.GsmAlphabet.TextEncodingDetails;
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsHeader;
-import com.android.internal.telephony.SmsMessageBase;
-import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.cdma.sms.BearerData;
-import com.android.internal.telephony.cdma.sms.CdmaSmsAddress;
-import com.android.internal.telephony.cdma.sms.CdmaSmsSubaddress;
-import com.android.internal.telephony.cdma.sms.SmsEnvelope;
-import com.android.internal.telephony.cdma.sms.UserData;
-import com.android.internal.telephony.uicc.IccUtils;
-import com.android.internal.util.BitwiseInputStream;
-import com.android.internal.util.HexDump;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -45,7 +25,21 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.TelephonyProperties;
+import io.a41dev.ril2.telephony.GsmAlphabet.TextEncodingDetails;
+import io.a41dev.ril2.telephony.SmsCbLocation;
+import io.a41dev.ril2.telephony.SmsCbMessage;
+import io.a41dev.ril2.telephony.SmsConstants;
+import io.a41dev.ril2.telephony.SmsHeader;
+import io.a41dev.ril2.telephony.SmsMessageBase;
+import io.a41dev.ril2.telephony.cdma.sms.BearerData;
+import io.a41dev.ril2.telephony.cdma.sms.CdmaSmsAddress;
+import io.a41dev.ril2.telephony.cdma.sms.CdmaSmsSubaddress;
+import io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope;
+import io.a41dev.ril2.telephony.cdma.sms.UserData;
+import io.a41dev.ril2.telephony.uicc.IccUtils;
 
 /**
  * TODO(cleanup): these constants are disturbing... are they not just
@@ -111,7 +105,7 @@ public class SmsMessage extends SmsMessageBase {
             msg.parsePdu(pdu);
             return msg;
         } catch (RuntimeException ex) {
-            Rlog.e(LOG_TAG, "SMS PDU parsing failed: ", ex);
+            Log.e(LOG_TAG, "SMS PDU parsing failed: ", ex);
             return null;
         } catch (OutOfMemoryError e) {
             Log.e(LOG_TAG, "SMS PDU parsing failed with out of memory: ", e);
@@ -241,7 +235,7 @@ public class SmsMessage extends SmsMessageBase {
             // or STORED_UNSENT
             // See 3GPP2 C.S0023 3.4.27
             if ((data[0] & 1) == 0) {
-                Rlog.w(LOG_TAG, "SMS parsing failed: Trying to parse a free record");
+                Log.w(LOG_TAG, "SMS parsing failed: Trying to parse a free record");
                 return null;
             } else {
                 msg.mStatusOnIcc = data[0] & 0x07;
@@ -260,7 +254,7 @@ public class SmsMessage extends SmsMessageBase {
             msg.parsePduFromEfRecord(pdu);
             return msg;
         } catch (RuntimeException ex) {
-            Rlog.e(LOG_TAG, "SMS PDU parsing failed: ", ex);
+            Log.e(LOG_TAG, "SMS PDU parsing failed: ", ex);
             return null;
         }
 
@@ -270,7 +264,7 @@ public class SmsMessage extends SmsMessageBase {
      * Note: This function is a GSM specific functionality which is not supported in CDMA mode.
      */
     public static int getTPLayerLengthForPDU(String pdu) {
-        Rlog.w(LOG_TAG, "getTPLayerLengthForPDU: is not supported in CDMA mode.");
+        Log.w(LOG_TAG, "getTPLayerLengthForPDU: is not supported in CDMA mode.");
         return 0;
     }
 
@@ -374,7 +368,7 @@ public class SmsMessage extends SmsMessageBase {
      */
     @Override
     public int getProtocolIdentifier() {
-        Rlog.w(LOG_TAG, "getProtocolIdentifier: is not supported in CDMA mode.");
+        Log.w(LOG_TAG, "getProtocolIdentifier: is not supported in CDMA mode.");
         // (3GPP TS 23.040): "no interworking, but SME to SME protocol":
         return 0;
     }
@@ -384,7 +378,7 @@ public class SmsMessage extends SmsMessageBase {
      */
     @Override
     public boolean isReplace() {
-        Rlog.w(LOG_TAG, "isReplace: is not supported in CDMA mode.");
+        Log.w(LOG_TAG, "isReplace: is not supported in CDMA mode.");
         return false;
     }
 
@@ -394,7 +388,7 @@ public class SmsMessage extends SmsMessageBase {
      */
     @Override
     public boolean isCphsMwiMessage() {
-        Rlog.w(LOG_TAG, "isCphsMwiMessage: is not supported in CDMA mode.");
+        Log.w(LOG_TAG, "isCphsMwiMessage: is not supported in CDMA mode.");
         return false;
     }
 
@@ -445,7 +439,7 @@ public class SmsMessage extends SmsMessageBase {
      */
     @Override
     public boolean isReplyPathPresent() {
-        Rlog.w(LOG_TAG, "isReplyPathPresent: is not supported in CDMA mode.");
+        Log.w(LOG_TAG, "isReplyPathPresent: is not supported in CDMA mode.");
         return false;
     }
 
@@ -464,11 +458,11 @@ public class SmsMessage extends SmsMessageBase {
     /**
      * Returns the teleservice type of the message.
      * @return the teleservice:
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#TELESERVICE_NOT_SET},
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#TELESERVICE_WMT},
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#TELESERVICE_WEMT},
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#TELESERVICE_VMN},
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#TELESERVICE_WAP}
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#TELESERVICE_NOT_SET},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#TELESERVICE_WMT},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#TELESERVICE_WEMT},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#TELESERVICE_VMN},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#TELESERVICE_WAP}
     */
     /* package */ int getTeleService() {
         return mEnvelope.teleService;
@@ -477,9 +471,9 @@ public class SmsMessage extends SmsMessageBase {
     /**
      * Returns the message type of the message.
      * @return the message type:
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#MESSAGE_TYPE_POINT_TO_POINT},
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#MESSAGE_TYPE_BROADCAST},
-     *  {@link com.android.internal.telephony.cdma.sms.SmsEnvelope#MESSAGE_TYPE_ACKNOWLEDGE},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#MESSAGE_TYPE_POINT_TO_POINT},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#MESSAGE_TYPE_BROADCAST},
+     *  {@link io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope#MESSAGE_TYPE_ACKNOWLEDGE},
     */
     /* package */ int getMessageType() {
         // NOTE: mEnvelope.messageType is not set correctly for cell broadcasts with some RILs.
@@ -548,7 +542,7 @@ public class SmsMessage extends SmsMessageBase {
             throw new RuntimeException(
                     "createFromPdu: conversion from byte array to object failed: " + ex, ex);
         } catch (Exception ex) {
-            Rlog.e(LOG_TAG, "createFromPdu: conversion from byte array to object failed: " + ex);
+            Log.e(LOG_TAG, "createFromPdu: conversion from byte array to object failed: " + ex);
         }
 
         // link the filled objects to this SMS
@@ -586,7 +580,7 @@ public class SmsMessage extends SmsMessageBase {
                          * this message
                          */
                         env.teleService = dis.readUnsignedShort();
-                        Rlog.i(LOG_TAG, "teleservice = " + env.teleService);
+                        Log.i(LOG_TAG, "teleservice = " + env.teleService);
                         break;
                     case SERVICE_CATEGORY:
                         /*
@@ -596,83 +590,8 @@ public class SmsMessage extends SmsMessageBase {
                         env.serviceCategory = dis.readUnsignedShort();
                         break;
                     case ORIGINATING_ADDRESS:
-                    case DESTINATION_ADDRESS:
-                        dis.read(parameterData, 0, parameterLen);
-                        BitwiseInputStream addrBis = new BitwiseInputStream(parameterData);
-                        addr.digitMode = addrBis.read(1);
-                        addr.numberMode = addrBis.read(1);
-                        int numberType = 0;
-                        if (addr.digitMode == CdmaSmsAddress.DIGIT_MODE_8BIT_CHAR) {
-                            numberType = addrBis.read(3);
-                            addr.ton = numberType;
 
-                            if (addr.numberMode == CdmaSmsAddress.NUMBER_MODE_NOT_DATA_NETWORK)
-                                addr.numberPlan = addrBis.read(4);
-                        }
-
-                        addr.numberOfDigits = addrBis.read(8);
-
-                        byte[] data = new byte[addr.numberOfDigits];
-                        byte b = 0x00;
-
-                        if (addr.digitMode == CdmaSmsAddress.DIGIT_MODE_4BIT_DTMF) {
-                            /* As per 3GPP2 C.S0005-0 Table 2.7.1.3.2.4-4 */
-                            for (int index = 0; index < addr.numberOfDigits; index++) {
-                                b = (byte) (0xF & addrBis.read(4));
-                                // convert the value if it is 4-bit DTMF to 8
-                                // bit
-                                data[index] = convertDtmfToAscii(b);
-                            }
-                        } else if (addr.digitMode == CdmaSmsAddress.DIGIT_MODE_8BIT_CHAR) {
-                            if (addr.numberMode == CdmaSmsAddress.NUMBER_MODE_NOT_DATA_NETWORK) {
-                                for (int index = 0; index < addr.numberOfDigits; index++) {
-                                    b = (byte) (0xFF & addrBis.read(8));
-                                    data[index] = b;
-                                }
-
-                            } else if (addr.numberMode == CdmaSmsAddress.NUMBER_MODE_DATA_NETWORK) {
-                                if (numberType == 2)
-                                    Rlog.e(LOG_TAG, "TODO: Originating Addr is email id");
-                                else
-                                    Rlog.e(LOG_TAG,
-                                          "TODO: Originating Addr is data network address");
-                            } else {
-                                Rlog.e(LOG_TAG, "Originating Addr is of incorrect type");
-                            }
-                        } else {
-                            Rlog.e(LOG_TAG, "Incorrect Digit mode");
-                        }
-                        addr.origBytes = data;
-                        Rlog.i(LOG_TAG, "Originating Addr=" + addr.toString());
-                        break;
                     case ORIGINATING_SUB_ADDRESS:
-                    case DESTINATION_SUB_ADDRESS:
-                        dis.read(parameterData, 0, parameterLen);
-                        BitwiseInputStream subAddrBis = new BitwiseInputStream(parameterData);
-                        subAddr.type = subAddrBis.read(3);
-                        subAddr.odd = subAddrBis.readByteArray(1)[0];
-                        int subAddrLen = subAddrBis.read(8);
-                        byte[] subdata = new byte[subAddrLen];
-                        for (int index = 0; index < subAddrLen; index++) {
-                            b = (byte) (0xFF & subAddrBis.read(4));
-                            // convert the value if it is 4-bit DTMF to 8 bit
-                            subdata[index] = convertDtmfToAscii(b);
-                        }
-                        subAddr.origBytes = subdata;
-                        break;
-                    case BEARER_REPLY_OPTION:
-                        dis.read(parameterData, 0, parameterLen);
-                        BitwiseInputStream replyOptBis = new BitwiseInputStream(parameterData);
-                        env.bearerReply = replyOptBis.read(6);
-                        break;
-                    case CAUSE_CODES:
-                        dis.read(parameterData, 0, parameterLen);
-                        BitwiseInputStream ccBis = new BitwiseInputStream(parameterData);
-                        env.replySeqNo = ccBis.readByteArray(6)[0];
-                        env.errorClass = ccBis.readByteArray(2)[0];
-                        if (env.errorClass != 0x00)
-                            env.causeCode = ccBis.readByteArray(8)[0];
-                        break;
                     case BEARER_DATA:
                         dis.read(parameterData, 0, parameterLen);
                         env.bearerData = parameterData;
@@ -684,7 +603,7 @@ public class SmsMessage extends SmsMessageBase {
             bais.close();
             dis.close();
         } catch (Exception ex) {
-            Rlog.e(LOG_TAG, "parsePduFromEfRecord: conversion from pdu to SmsMessage failed" + ex);
+            Log.e(LOG_TAG, "parsePduFromEfRecord: conversion from pdu to SmsMessage failed" + ex);
         }
 
         // link the filled objects to this SMS
@@ -709,17 +628,17 @@ public class SmsMessage extends SmsMessageBase {
                 mBearerData.numberOfMessages = 0x000000FF & mEnvelope.bearerData[0];
             }
             if (VDBG) {
-                Rlog.d(LOG_TAG, "parseSms: get MWI " +
+                Log.d(LOG_TAG, "parseSms: get MWI " +
                       Integer.toString(mBearerData.numberOfMessages));
             }
             return;
         }
         mBearerData = BearerData.decode(mEnvelope.bearerData);
-        if (Rlog.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
-            Rlog.d(LOG_TAG, "MT raw BearerData = '" +
+     /*   if (Log.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
+            Log.d(LOG_TAG, "MT raw BearerData = '" +
                       HexDump.toHexString(mEnvelope.bearerData) + "'");
-            Rlog.d(LOG_TAG, "MT (decoded) BearerData = " + mBearerData);
-        }
+            Log.d(LOG_TAG, "MT (decoded) BearerData = " + mBearerData);
+        }*/
         mMessageRef = mBearerData.messageId;
         if (mBearerData.userData != null) {
             mUserData = mBearerData.userData.payload;
@@ -734,7 +653,7 @@ public class SmsMessage extends SmsMessageBase {
                     mOriginatingAddress.address = "+" + mOriginatingAddress.address;
                 }
             }
-            if (VDBG) Rlog.v(LOG_TAG, "SMS originating address: "
+            if (VDBG) Log.v(LOG_TAG, "SMS originating address: "
                     + mOriginatingAddress.address);
         }
 
@@ -742,7 +661,7 @@ public class SmsMessage extends SmsMessageBase {
             mScTimeMillis = mBearerData.msgCenterTimeStamp.toMillis(true);
         }
 
-        if (VDBG) Rlog.d(LOG_TAG, "SMS SC timestamp: " + mScTimeMillis);
+        if (VDBG) Log.d(LOG_TAG, "SMS SC timestamp: " + mScTimeMillis);
 
         // Message Type (See 3GPP2 C.S0015-B, v2, 4.5.1)
         if (mBearerData.messageType == BearerData.MESSAGE_TYPE_DELIVERY_ACK) {
@@ -754,7 +673,7 @@ public class SmsMessage extends SmsMessageBase {
             // message without this subparameter is assumed to
             // indicate successful delivery (status == 0).
             if (! mBearerData.messageStatusSet) {
-                Rlog.d(LOG_TAG, "DELIVERY_ACK message without msgStatus (" +
+                Log.d(LOG_TAG, "DELIVERY_ACK message without msgStatus (" +
                         (mUserData == null ? "also missing" : "does have") +
                         " userData).");
                 status = 0;
@@ -767,10 +686,10 @@ public class SmsMessage extends SmsMessageBase {
         }
 
         if (mMessageBody != null) {
-            if (VDBG) Rlog.v(LOG_TAG, "SMS message body: '" + mMessageBody + "'");
+            if (VDBG) Log.v(LOG_TAG, "SMS message body: '" + mMessageBody + "'");
             parseMessageBody();
         } else if ((mUserData != null) && VDBG) {
-            Rlog.v(LOG_TAG, "SMS payload: '" + IccUtils.bytesToHexString(mUserData) + "'");
+            Log.v(LOG_TAG, "SMS payload: '" + IccUtils.bytesToHexString(mUserData) + "'");
         }
     }
 
@@ -780,21 +699,16 @@ public class SmsMessage extends SmsMessageBase {
     SmsCbMessage parseBroadcastSms() {
         BearerData bData = BearerData.decode(mEnvelope.bearerData, mEnvelope.serviceCategory);
         if (bData == null) {
-            Rlog.w(LOG_TAG, "BearerData.decode() returned null");
+            Log.w(LOG_TAG, "BearerData.decode() returned null");
             return null;
         }
 
-        if (Rlog.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
-            Rlog.d(LOG_TAG, "MT raw BearerData = " + HexDump.toHexString(mEnvelope.bearerData));
-        }
+
 
         String plmn = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_NUMERIC);
         SmsCbLocation location = new SmsCbLocation(plmn);
 
-        return new SmsCbMessage(SmsCbMessage.MESSAGE_FORMAT_3GPP2,
-                SmsCbMessage.GEOGRAPHICAL_SCOPE_PLMN_WIDE, bData.messageId, location,
-                mEnvelope.serviceCategory, bData.getLanguage(), bData.userData.payloadStr,
-                bData.priority, null, bData.cmasWarningInfo);
+        return null;
     }
 
     /**
@@ -825,11 +739,11 @@ public class SmsMessage extends SmsMessageBase {
         int msgId = SystemProperties.getInt(TelephonyProperties.PROPERTY_CDMA_MSG_ID, 1);
         String nextMsgId = Integer.toString((msgId % 0xFFFF) + 1);
         SystemProperties.set(TelephonyProperties.PROPERTY_CDMA_MSG_ID, nextMsgId);
-        if (Rlog.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
-            Rlog.d(LOG_TAG, "next " + TelephonyProperties.PROPERTY_CDMA_MSG_ID + " = " + nextMsgId);
-            Rlog.d(LOG_TAG, "readback gets " +
+       /* if (Log.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
+            Log.d(LOG_TAG, "next " + TelephonyProperties.PROPERTY_CDMA_MSG_ID + " = " + nextMsgId);
+            Log.d(LOG_TAG, "readback gets " +
                     SystemProperties.get(TelephonyProperties.PROPERTY_CDMA_MSG_ID));
-        }
+        }*/
         return msgId;
     }
 
@@ -854,8 +768,8 @@ public class SmsMessage extends SmsMessageBase {
          * North America Plus Code :
          * Convert + code to 011 and dial out for international SMS
          */
-        CdmaSmsAddress destAddr = CdmaSmsAddress.parse(
-                PhoneNumberUtils.cdmaCheckAndProcessPlusCodeForSms(destAddrStr));
+        CdmaSmsAddress destAddr = /*CdmaSmsAddress.parse(
+                PhoneNumberUtils.cdmaCheckAndProcessPlusCodeForSms(destAddrStr))*/null;
         if (destAddr == null) return null;
 
         BearerData bearerData = new BearerData();
@@ -871,10 +785,10 @@ public class SmsMessage extends SmsMessageBase {
         bearerData.userData = userData;
 
         byte[] encodedBearerData = BearerData.encode(bearerData);
-        if (Rlog.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
-            Rlog.d(LOG_TAG, "MO (encoded) BearerData = " + bearerData);
-            Rlog.d(LOG_TAG, "MO raw BearerData = '" + HexDump.toHexString(encodedBearerData) + "'");
-        }
+       /* if (Log.isLoggable(LOGGABLE_TAG, Log.VERBOSE)) {
+            Log.d(LOG_TAG, "MO (encoded) BearerData = " + bearerData);
+            Log.d(LOG_TAG, "MO raw BearerData = '" + HexDump.toHexString(encodedBearerData) + "'");
+        }*/
         if (encodedBearerData == null) return null;
 
         int teleservice = bearerData.hasUserDataHeader ?
@@ -921,7 +835,7 @@ public class SmsMessage extends SmsMessageBase {
             pdu.encodedScAddress = null;
             return pdu;
         } catch(IOException ex) {
-            Rlog.e(LOG_TAG, "creating SubmitPdu failed: " + ex);
+            Log.e(LOG_TAG, "creating SubmitPdu failed: " + ex);
         }
         return null;
     }
@@ -968,7 +882,7 @@ public class SmsMessage extends SmsMessageBase {
 
             mPdu = baos.toByteArray();
         } catch (IOException ex) {
-            Rlog.e(LOG_TAG, "createPdu: conversion from object to byte array failed: " + ex);
+            Log.e(LOG_TAG, "createPdu: conversion from object to byte array failed: " + ex);
         }
     }
 
@@ -1033,7 +947,7 @@ public class SmsMessage extends SmsMessageBase {
      * Returns the list of service category program data, if present.
      * @return a list of CdmaSmsCbProgramData objects, or null if not present
      */
-    ArrayList<CdmaSmsCbProgramData> getSmsCbProgramData() {
+ /*   ArrayList<CdmaSmsCbProgramData> getSmsCbProgramData() {
         return mBearerData.serviceCategoryProgramData;
-    }
+    }*/
 }

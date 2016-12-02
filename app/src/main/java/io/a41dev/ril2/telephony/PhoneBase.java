@@ -22,14 +22,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.telephony.ServiceState;
-import android.telephony.SignalStrength;
 import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.a41dev.ril2.R;
@@ -37,16 +36,12 @@ import io.a41dev.ril2.SystemProperties;
 import io.a41dev.ril2.TelephonyProperties;
 import io.a41dev.ril2.telephony.dataconnection.DcTrackerBase;
 import io.a41dev.ril2.telephony.test.SimulatedRadioControl;
-import io.a41dev.ril2.telephony.uicc.IccCardApplicationStatus;
-import io.a41dev.ril2.telephony.uicc.IccFileHandler;
-import io.a41dev.ril2.telephony.uicc.UiccCardApplication;
-import io.a41dev.ril2.telephony.uicc.UiccController;
-import io.a41dev.ril2.telephony.uicc.UsimServiceTable;
+import io.a41dev.ril2.telephony.uicc.*;
 
 
 /**
  * (<em>Not for SDK use</em>)
- * A base implementation for the com.android.internal.telephony.Phone interface.
+ * A base implementation for the io.a41dev.ril2.telephony.Phone interface.
  *
  * Note that implementations of Phone.java are expected to be used
  * from a single application thread. This should be the same thread that
@@ -122,7 +117,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     public boolean mIsTheCurrentActivePhone = true;
     boolean mIsVoiceCapable = true;
     protected UiccController mUiccController = null;
-    public AtomicReference<IccRecords> mIccRecords = new AtomicReference<IccRecords>();
+    public AtomicReference<io.a41dev.ril2.telephony.uicc.IccRecords> mIccRecords = new AtomicReference<io.a41dev.ril2.telephony.uicc.IccRecords>();
     public SmsStorageMonitor mSmsStorageMonitor;
     public SmsUsageMonitor mSmsUsageMonitor;
     protected AtomicReference<UiccCardApplication> mUiccApplication =
@@ -142,7 +137,7 @@ public abstract class PhoneBase extends Handler implements Phone {
      * Return the ActionDetached string. When this action is received by components
      * they are to simulate detaching from the network.
      *
-     * @return com.android.internal.telephony.{mName}.action_detached
+     * @return io.a41dev.ril2.telephony.{mName}.action_detached
      *          {mName} is GSM, CDMA ...
      */
     public String getActionDetached() {
@@ -153,7 +148,7 @@ public abstract class PhoneBase extends Handler implements Phone {
      * Return the ActionAttached string. When this action is received by components
      * they are to simulate attaching to the network.
      *
-     * @return com.android.internal.telephony.{mName}.action_detached
+     * @return io.a41dev.ril2.telephony.{mName}.action_detached
      *          {mName} is GSM, CDMA ...
      */
     public String getActionAttached() {
@@ -245,7 +240,7 @@ public abstract class PhoneBase extends Handler implements Phone {
         mActionDetached = this.getClass().getPackage().getName() + ".action_detached";
         mActionAttached = this.getClass().getPackage().getName() + ".action_attached";
 
-       /* if (Build.IS_DEBUGGABLE) {
+       /* if (true) {
             mTelephonyTester = new TelephonyTester(this);
         }*/
 
@@ -263,8 +258,8 @@ public abstract class PhoneBase extends Handler implements Phone {
         * This will be false on "data only" devices which can't make voice
         * calls and don't support any in-call UI.
         */
-        mIsVoiceCapable = mContext.getResources().getBoolean(
-                com.android.internal.R.bool.config_voice_capable);
+        mIsVoiceCapable = /*mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_voice_capable)*/false;
 
         /**
          *  Some RIL's don't always send RIL_UNSOL_CALL_RING so it needs
@@ -669,7 +664,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     private void checkCorrectThread(Handler h) {
         if (h.getLooper() != mLooper) {
             throw new RuntimeException(
-                    "com.android.internal.telephony.Phone must be used from within one thread");
+                    "io.a41dev.ril2.telephony.Phone must be used from within one thread");
         }
     }
 
@@ -773,24 +768,24 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     @Override
     public String getIccSerialNumber() {
-        IccRecords r = mIccRecords.get();
+        io.a41dev.ril2.telephony.uicc.IccRecords r = mIccRecords.get();
         return (r != null) ? "" : null;
     }
 
     @Override
     public boolean getIccRecordsLoaded() {
-        IccRecords r = mIccRecords.get();
+        io.a41dev.ril2.telephony.uicc.IccRecords r = mIccRecords.get();
         return (r != null) ? r.getRecordsLoaded() : false;
     }
 
     /**
      * @return all available cell information or null if none.
-     */
+   /*  *//*
     @Override
     public List<CellInfo> getAllCellInfo() {
-        List<CellInfo> cellInfoList = getServiceStateTracker().getAllCellInfo();
-        return privatizeCellInfoList(cellInfoList);
-    }
+      *//*  List<CellInfo> cellInfoList = getServiceStateTracker().getAllCellInfo();*//*
+        *//*return privatizeCellInfoList(cellInfoList);*//*
+    }*/
 
     /**
      * Clear CDMA base station lat/long values if location setting is disabled.
@@ -798,7 +793,7 @@ public abstract class PhoneBase extends Handler implements Phone {
      * @return the original list with CDMA lat/long cleared if necessary
      */
     private List<CellInfo> privatizeCellInfoList(List<CellInfo> cellInfoList) {
-        int mode = Settings.Secure.getInt(getContext().getContentResolver(),
+        /*int mode = Settings.Secure.getInt(getContext().getContentResolver(),
                 Settings.Secure.LOCATION_MODE, Settings.Secure.LOCATION_MODE_OFF);
         if (mode == Settings.Secure.LOCATION_MODE_OFF) {
             ArrayList<CellInfo> privateCellInfoList = new ArrayList<CellInfo>(cellInfoList.size());
@@ -820,7 +815,7 @@ public abstract class PhoneBase extends Handler implements Phone {
                 }
             }
             cellInfoList = privateCellInfoList;
-        }
+        }*/
         return cellInfoList;
     }
 
@@ -834,13 +829,13 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     @Override
     public boolean getMessageWaitingIndicator() {
-        IccRecords r = mIccRecords.get();
+        io.a41dev.ril2.telephony.uicc.IccRecords r = mIccRecords.get();
         return (r != null) ? r.getVoiceMessageWaiting() : false;
     }
 
     @Override
     public boolean getCallForwardingIndicator() {
-        IccRecords r = mIccRecords.get();
+        io.a41dev.ril2.telephony.uicc.IccRecords r = mIccRecords.get();
         return (r != null) ? r.getVoiceCallForwardingFlag() : false;
     }
 
@@ -854,16 +849,16 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     /**
      * Get the signal strength
-     */
+   /*  *//*
     @Override
     public SignalStrength getSignalStrength() {
         ServiceStateTracker sst = getServiceStateTracker();
         if (sst == null) {
-            return new SignalStrength();
+          *//*  return new SignalStrength();*//*
         } else {
             return sst.getSignalStrength();
         }
-    }
+    }*/
 
     /**
      *  Set the status of the CDMA roaming preference
@@ -1232,7 +1227,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     public String getActiveApnHost(String apnType) {
         return mDcTracker.getActiveApnString(apnType);
     }
-
+/*
     @Override
     public LinkProperties getLinkProperties(String apnType) {
         return mDcTracker.getLinkProperties(apnType);
@@ -1241,7 +1236,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     @Override
     public LinkCapabilities getLinkCapabilities(String apnType) {
         return mDcTracker.getLinkCapabilities(apnType);
-    }
+    }*/
 
     @Override
     public int enableApnType(String type) {
@@ -1379,7 +1374,7 @@ public abstract class PhoneBase extends Handler implements Phone {
      */
     @Override
     public void setVoiceMessageWaiting(int line, int countWaiting) {
-        IccRecords r = mIccRecords.get();
+        io.a41dev.ril2.telephony.uicc.IccRecords r = mIccRecords.get();
         if (r != null) {
             r.setVoiceMessageWaiting(line, countWaiting);
         }
@@ -1391,7 +1386,7 @@ public abstract class PhoneBase extends Handler implements Phone {
      */
     @Override
     public UsimServiceTable getUsimServiceTable() {
-        IccRecords r = mIccRecords.get();
+        io.a41dev.ril2.telephony.uicc.IccRecords r = mIccRecords.get();
         return (r != null) ? r.getUsimServiceTable() : null;
     }
 

@@ -19,14 +19,12 @@ package io.a41dev.ril2.telephony;
 import android.content.ContentValues;
 import android.database.Cursor;
 
-import com.android.internal.util.HexDump;
-
 import java.util.Arrays;
 import java.util.Date;
 
 /**
  * Tracker for an incoming SMS message ready to broadcast to listeners.
- * This is similar to {@link com.android.internal.telephony.SMSDispatcher.SmsTracker} used for
+ * This is similar to {@link io.a41dev.ril2.telephony.SMSDispatcher.SmsTracker} used for
  * outgoing messages.
  */
 public final class InboundSmsTracker {

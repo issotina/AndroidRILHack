@@ -157,6 +157,10 @@ public class SmsCbMessage implements Parcelable {
                 mCmasWarningInfo = null;
         }
     }
+
+
+
+
     /**
      * Flatten this object into a Parcel.
      *

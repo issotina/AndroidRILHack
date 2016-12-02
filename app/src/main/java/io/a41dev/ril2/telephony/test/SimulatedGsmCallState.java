@@ -16,18 +16,23 @@
 
 package io.a41dev.ril2.telephony.test;
 
+import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.os.Handler;
 import android.telephony.PhoneNumberUtils;
-import com.android.internal.telephony.ATParseEx;
-import com.android.internal.telephony.DriverCall;
-import java.util.List;
-import java.util.ArrayList;
+import android.util.Log;
 
-import android.telephony.Rlog;
+import java.util.ArrayList;
+import java.util.List;
+
+import io.a41dev.ril2.telephony.DriverCall;
+
 
 class CallInfo {
+    public DriverCall toDriverCall(int i) {
+        return null;
+    }
+
     enum State {
         ACTIVE(0),
         HOLDING(1),
@@ -80,7 +85,7 @@ class CallInfo {
             + ",\"" + mNumber + "\"," + mTOA;
     }
 
-    DriverCall
+   /* 
     toDriverCall(int index) {
         DriverCall ret;
 
@@ -102,7 +107,7 @@ class CallInfo {
         ret.als = 0;
 
         return ret;
-    }
+    }*/
 
 
     boolean
@@ -190,7 +195,7 @@ class SimulatedGsmCallState extends Handler {
                     && (call.mState == CallInfo.State.INCOMING
                         || call.mState == CallInfo.State.WAITING)
                 ) {
-                    Rlog.w("ModelInterpreter",
+                    Log.w("ModelInterpreter",
                         "triggerRing failed; phone already ringing");
                     return false;
                 } else if (call != null) {
@@ -199,7 +204,7 @@ class SimulatedGsmCallState extends Handler {
             }
 
             if (empty < 0 ) {
-                Rlog.w("ModelInterpreter", "triggerRing failed; all full");
+                Log.w("ModelInterpreter", "triggerRing failed; all full");
                 return false;
             }
 
@@ -659,25 +664,25 @@ class SimulatedGsmCallState extends Handler {
         CallInfo call;
         int freeSlot = -1;
 
-        Rlog.d("GSM", "SC> dial '" + address + "'");
+        Log.d("GSM", "SC> dial '" + address + "'");
 
         if (mNextDialFailImmediately) {
             mNextDialFailImmediately = false;
 
-            Rlog.d("GSM", "SC< dial fail (per request)");
+            Log.d("GSM", "SC< dial fail (per request)");
             return false;
         }
 
         String phNum = PhoneNumberUtils.extractNetworkPortion(address);
 
         if (phNum.length() == 0) {
-            Rlog.d("GSM", "SC< dial fail (invalid ph num)");
+            Log.d("GSM", "SC< dial fail (invalid ph num)");
             return false;
         }
 
         // Ignore setting up GPRS
         if (phNum.startsWith("*99") && phNum.endsWith("#")) {
-            Rlog.d("GSM", "SC< dial ignored (gprs)");
+            Log.d("GSM", "SC< dial ignored (gprs)");
             return true;
         }
 
@@ -685,11 +690,11 @@ class SimulatedGsmCallState extends Handler {
         // a new call
         try {
             if (countActiveLines() > 1) {
-                Rlog.d("GSM", "SC< dial fail (invalid call state)");
+                Log.d("GSM", "SC< dial fail (invalid call state)");
                 return false;
             }
         } catch (InvalidStateEx ex) {
-            Rlog.d("GSM", "SC< dial fail (invalid call state)");
+            Log.d("GSM", "SC< dial fail (invalid call state)");
             return false;
         }
 
@@ -701,7 +706,7 @@ class SimulatedGsmCallState extends Handler {
             if (mCalls[i] != null && !mCalls[i].isActiveOrHeld()) {
                 // Can't make outgoing calls when there is a ringing or
                 // connecting outgoing call
-                Rlog.d("GSM", "SC< dial fail (invalid call state)");
+                Log.d("GSM", "SC< dial fail (invalid call state)");
                 return false;
             } else if (mCalls[i] != null && mCalls[i].mState == CallInfo.State.ACTIVE) {
                 // All active calls behome held
@@ -710,7 +715,7 @@ class SimulatedGsmCallState extends Handler {
         }
 
         if (freeSlot < 0) {
-            Rlog.d("GSM", "SC< dial fail (invalid call state)");
+            Log.d("GSM", "SC< dial fail (invalid call state)");
             return false;
         }
 
@@ -722,7 +727,7 @@ class SimulatedGsmCallState extends Handler {
                     CONNECTING_PAUSE_MSEC);
         }
 
-        Rlog.d("GSM", "SC< dial (slot = " + freeSlot + ")");
+        Log.d("GSM", "SC< dial (slot = " + freeSlot + ")");
 
         return true;
     }
@@ -742,7 +747,7 @@ class SimulatedGsmCallState extends Handler {
             }
         }
 
-        Rlog.d("GSM", "SC< getDriverCalls " + ret);
+        Log.d("GSM", "SC< getDriverCalls " + ret);
 
         return ret;
     }
@@ -780,12 +785,12 @@ class SimulatedGsmCallState extends Handler {
                 } else if (call.mIsMpty && mptyIsHeld
                     && call.mState == CallInfo.State.ACTIVE
                 ) {
-                    Rlog.e("ModelInterpreter", "Invalid state");
+                    Log.e("ModelInterpreter", "Invalid state");
                     throw new InvalidStateEx();
                 } else if (!call.mIsMpty && hasMpty && mptyIsHeld
                     && call.mState == CallInfo.State.HOLDING
                 ) {
-                    Rlog.e("ModelInterpreter", "Invalid state");
+                    Log.e("ModelInterpreter", "Invalid state");
                     throw new InvalidStateEx();
                 }
 

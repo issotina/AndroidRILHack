@@ -18,21 +18,36 @@ package io.a41dev.ril2.telephony.gsm;
 
 import android.content.Context;
 import android.content.res.Resources;
-import com.android.internal.telephony.*;
-import com.android.internal.telephony.uicc.IccRecords;
-import com.android.internal.telephony.uicc.UiccCardApplication;
-import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
-
-import android.os.*;
+import android.os.Handler;
+import android.os.Message;
 import android.telephony.PhoneNumberUtils;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
-import android.telephony.Rlog;
+import android.util.Log;
 
-import static com.android.internal.telephony.CommandsInterface.*;
-
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import io.a41dev.ril2.R;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CallForwardInfo;
+import io.a41dev.ril2.telephony.CommandException;
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.MmiCode;
+import io.a41dev.ril2.telephony.uicc.IccCardApplicationStatus.AppState;
+import io.a41dev.ril2.telephony.uicc.IccRecords;
+import io.a41dev.ril2.telephony.uicc.UiccCardApplication;
+
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_DATA;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_DATA_ASYNC;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_DATA_SYNC;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_FAX;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_MAX;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_NONE;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_PACKET;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_PAD;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_SMS;
+import static io.a41dev.ril2.telephony.CommandsInterface.SERVICE_CLASS_VOICE;
 
 /**
  * The motto for this file is:
@@ -365,7 +380,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
         Resources resource = Resources.getSystem();
         if (sc != null) {
             String[] barringMMI = resource.getStringArray(
-                com.android.internal.R.array.config_callBarringMMI);
+                R.array.config_callBarringMMI);
             if (barringMMI != null) {
                 for (String match : barringMMI) {
                     if (sc.equals(match)) return true;
@@ -486,23 +501,23 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
     static private boolean
     isTwoDigitShortCode(Context context, String dialString) {
-        Rlog.d(LOG_TAG, "isTwoDigitShortCode");
+        Log.d(LOG_TAG, "isTwoDigitShortCode");
 
         if (dialString == null || dialString.length() != 2) return false;
 
         if (sTwoDigitNumberPattern == null) {
-            sTwoDigitNumberPattern = context.getResources().getStringArray(
-                    com.android.internal.R.array.config_twoDigitNumberPattern);
+            sTwoDigitNumberPattern =/* context.getResources().getStringArray(
+                    com.android.internal.R.array.config_twoDigitNumberPattern)*/null;
         }
 
         for (String dialnumber : sTwoDigitNumberPattern) {
-            Rlog.d(LOG_TAG, "Two Digit Number Pattern " + dialnumber);
+            Log.d(LOG_TAG, "Two Digit Number Pattern " + dialnumber);
             if (dialString.equals(dialnumber)) {
-                Rlog.d(LOG_TAG, "Two Digit Number Pattern -true");
+                Log.d(LOG_TAG, "Two Digit Number Pattern -true");
                 return true;
             }
         }
-        Rlog.d(LOG_TAG, "Two Digit Number Pattern -false");
+        Log.d(LOG_TAG, "Two Digit Number Pattern -false");
         return false;
     }
 
@@ -525,11 +540,11 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             return false;
         }
 
-        if (PhoneNumberUtils.isLocalEmergencyNumber(dialString, phone.getContext())) {
+       /* if (PhoneNumberUtils.isLocalEmergencyNumber(dialString, phone.getContext())) {
             return false;
-        } else {
+        } else {*/
             return isShortCodeUSSD(dialString, phone);
-        }
+        /*}*/
     }
 
     /**
@@ -637,14 +652,14 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     processCode () {
         try {
             if (isShortCode()) {
-                Rlog.d(LOG_TAG, "isShortCode");
+                Log.d(LOG_TAG, "isShortCode");
                 // These just get treated as USSD.
                 sendUssd(mDialingNumber);
             } else if (mDialingNumber != null) {
                 // We should have no dialing numbers here
                 throw new RuntimeException ("Invalid or Unsupported MMI Code");
             } else if (mSc != null && mSc.equals(SC_CLIP)) {
-                Rlog.d(LOG_TAG, "is CLIP");
+                Log.d(LOG_TAG, "is CLIP");
                 if (isInterrogate()) {
                     mPhone.mCi.queryCLIP(
                             obtainMessage(EVENT_QUERY_COMPLETE, this));
@@ -652,7 +667,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                     throw new RuntimeException ("Invalid or Unsupported MMI Code");
                 }
             } else if (mSc != null && mSc.equals(SC_CLIR)) {
-                Rlog.d(LOG_TAG, "is CLIR");
+                Log.d(LOG_TAG, "is CLIR");
                 if (isActivate()) {
                     mPhone.mCi.setCLIR(CommandsInterface.CLIR_INVOCATION,
                         obtainMessage(EVENT_SET_COMPLETE, this));
@@ -666,7 +681,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                     throw new RuntimeException ("Invalid or Unsupported MMI Code");
                 }
             } else if (isServiceCodeCallForwarding(mSc)) {
-                Rlog.d(LOG_TAG, "is CF");
+                Log.d(LOG_TAG, "is CF");
 
                 String dialingNumber = mSia;
                 int serviceClass = siToServiceClass(mSib);
@@ -712,7 +727,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                         ((cfAction == CommandsInterface.CF_ACTION_ENABLE) ||
                                 (cfAction == CommandsInterface.CF_ACTION_REGISTRATION)) ? 1 : 0;
 
-                    Rlog.d(LOG_TAG, "is CF setCallForward");
+                    Log.d(LOG_TAG, "is CF setCallForward");
                     mPhone.mCi.setCallForward(cfAction, reason, serviceClass,
                             dialingNumber, time, obtainMessage(
                                     EVENT_SET_CFF_COMPLETE,
@@ -760,7 +775,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                                 newPwd, obtainMessage(EVENT_SET_COMPLETE, this));
                     } else {
                         // password mismatch; return error
-                        handlePasswordError(com.android.internal.R.string.passwordIncorrect);
+                   /*     handlePasswordError(com.android.internal.R.string.passwordIncorrect);*/
                     }
                 } else {
                     throw new RuntimeException ("Invalid or Unsupported MMI Code");
@@ -793,17 +808,17 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                 if (isRegister()) {
                     if (!newPinOrPuk.equals(mSic)) {
                         // password mismatch; return error
-                        handlePasswordError(com.android.internal.R.string.mismatchPin);
+                        /*handlePasswordError(com.android.internal.R.string.mismatchPin);*/
                     } else if (pinLen < 4 || pinLen > 8 ) {
                         // invalid length
-                        handlePasswordError(com.android.internal.R.string.invalidPin);
+                      /*  handlePasswordError(com.android.internal.R.string.invalidPin);*/
                     } else if (mSc.equals(SC_PIN)
                             && mUiccApplication != null
                             && mUiccApplication.getState() == AppState.APPSTATE_PUK) {
                         // Sim is puk-locked
-                        handlePasswordError(com.android.internal.R.string.needPuk);
+                      /*  handlePasswordError(com.android.internal.R.string.needPuk);*/
                     } else if (mUiccApplication != null) {
-                        Rlog.d(LOG_TAG, "process mmi service code using UiccApp sc=" + mSc);
+                        Log.d(LOG_TAG, "process mmi service code using UiccApp sc=" + mSc);
 
                         // We have an app and the pre-checks are OK
                         if (mSc.equals(SC_PIN)) {
@@ -834,7 +849,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             }
         } catch (RuntimeException exc) {
             mState = State.FAILED;
-            mMessage = mContext.getText(com.android.internal.R.string.mmiError);
+            mMessage /*= mContext.getText(com.android.internal.R.string.mmiError)*/ = "";
             mPhone.onMMIDone(this);
         }
     }
@@ -861,7 +876,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     onUssdFinished(String ussdMessage, boolean isUssdRequest) {
         if (mState == State.PENDING) {
             if (ussdMessage == null) {
-                mMessage = mContext.getText(com.android.internal.R.string.mmiComplete);
+                mMessage =/* mContext.getText(com.android.internal.R.string.mmiComplete)*/ "";
             } else {
                 mMessage = ussdMessage;
             }
@@ -885,7 +900,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     onUssdFinishedError() {
         if (mState == State.PENDING) {
             mState = State.FAILED;
-            mMessage = mContext.getText(com.android.internal.R.string.mmiError);
+            mMessage = /*mContext.getText(com.android.internal.R.string.mmiError)*/"";
 
             mPhone.onMMIDone(this);
         }
@@ -978,30 +993,30 @@ public final class GsmMmiCode extends Handler implements MmiCode {
         if (ar.exception instanceof CommandException) {
             CommandException.Error err = ((CommandException)(ar.exception)).getCommandError();
             if (err == CommandException.Error.FDN_CHECK_FAILURE) {
-                Rlog.i(LOG_TAG, "FDN_CHECK_FAILURE");
-                return mContext.getText(com.android.internal.R.string.mmiFdnError);
+                Log.i(LOG_TAG, "FDN_CHECK_FAILURE");
+                return /*mContext.getText(com.android.internal.R.string.mmiFdnError)*/"";
             }
         }
 
-        return mContext.getText(com.android.internal.R.string.mmiError);
+        return/* mContext.getText(com.android.internal.R.string.mmiError)*/ "";
     }
 
     private CharSequence getScString() {
         if (mSc != null) {
             if (isServiceCodeCallBarring(mSc)) {
-                return mContext.getText(com.android.internal.R.string.BaMmi);
+                return /*mContext.getText(com.android.internal.R.string.BaMmi)*/"";
             } else if (isServiceCodeCallForwarding(mSc)) {
-                return mContext.getText(com.android.internal.R.string.CfMmi);
+                return /*mContext.getText(com.android.internal.R.string.CfMmi)*/"";
             } else if (mSc.equals(SC_CLIP)) {
-                return mContext.getText(com.android.internal.R.string.ClipMmi);
+                return /*mContext.getText(com.android.internal.R.string.ClipMmi)*/"";
             } else if (mSc.equals(SC_CLIR)) {
-                return mContext.getText(com.android.internal.R.string.ClirMmi);
+                return /*mContext.getText(com.android.internal.R.string.ClirMmi)*/"";
             } else if (mSc.equals(SC_PWD)) {
-                return mContext.getText(com.android.internal.R.string.PwdMmi);
+                return/* mContext.getText(com.android.internal.R.string.PwdMmi)*/"";
             } else if (mSc.equals(SC_WAIT)) {
-                return mContext.getText(com.android.internal.R.string.CwMmi);
+                return /*mContext.getText(com.android.internal.R.string.CwMmi)*/"";
             } else if (isPinPukCommand()) {
-                return mContext.getText(com.android.internal.R.string.PinMmi);
+                return/* mContext.getText(com.android.internal.R.string.PinMmi)*/"";
             }
         }
 
@@ -1022,57 +1037,58 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                         // look specifically for the PUK commands and adjust
                         // the message accordingly.
                         if (mSc.equals(SC_PUK) || mSc.equals(SC_PUK2)) {
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.badPuk));
+                           /* sb.append(mContext.getText(
+                                    com.android.internal.R.string.badPuk));*/
                         } else {
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.badPin));
+                            /*sb.append(mContext.getText(
+                                    com.android.internal.R.string.badPin));*/
                         }
                         // Get the No. of retries remaining to unlock PUK/PUK2
                         int attemptsRemaining = msg.arg1;
                         if (attemptsRemaining <= 0) {
-                            Rlog.d(LOG_TAG, "onSetComplete: PUK locked,"
+                            Log.d(LOG_TAG, "onSetComplete: PUK locked,"
                                     + " cancel as lock screen will handle this");
                             mState = State.CANCELLED;
                         } else if (attemptsRemaining > 0) {
-                            Rlog.d(LOG_TAG, "onSetComplete: attemptsRemaining="+attemptsRemaining);
-                            sb.append(mContext.getResources().getQuantityString(
+                            Log.d(LOG_TAG, "onSetComplete: attemptsRemaining="+attemptsRemaining);
+                           /* sb.append(mContext.getResources().getQuantityString(
                                     com.android.internal.R.plurals.pinpuk_attempts,
-                                    attemptsRemaining, attemptsRemaining));
+                                    attemptsRemaining, attemptsRemaining));*/
+                            //TODO
                         }
                     } else {
-                        sb.append(mContext.getText(
-                                com.android.internal.R.string.passwordIncorrect));
+                       /* sb.append(mContext.getText(
+                                com.android.internal.R.string.passwordIncorrect));*/
                     }
                 } else if (err == CommandException.Error.SIM_PUK2) {
-                    sb.append(mContext.getText(
-                            com.android.internal.R.string.badPin));
+                  /*  sb.append(mContext.getText(
+                            com.android.internal.R.string.badPin));*/
                     sb.append("\n");
-                    sb.append(mContext.getText(
-                            com.android.internal.R.string.needPuk2));
+                   /* sb.append(mContext.getText(
+                            com.android.internal.R.string.needPuk2));*/
                 } else if (err == CommandException.Error.REQUEST_NOT_SUPPORTED) {
                     if (mSc.equals(SC_PIN)) {
-                        sb.append(mContext.getText(com.android.internal.R.string.enablePin));
+                        //sb.append(mContext.getText(com.android.internal.R.string.enablePin));
                     }
                 } else if (err == CommandException.Error.FDN_CHECK_FAILURE) {
-                    Rlog.i(LOG_TAG, "FDN_CHECK_FAILURE");
-                    sb.append(mContext.getText(com.android.internal.R.string.mmiFdnError));
+                    Log.i(LOG_TAG, "FDN_CHECK_FAILURE");
+                   /* sb.append(mContext.getText(com.android.internal.R.string.mmiFdnError));*/
                 } else {
-                    sb.append(mContext.getText(
-                            com.android.internal.R.string.mmiError));
+                  /*  sb.append(mContext.getText(
+                            com.android.internal.R.string.mmiError));*/
                 }
             } else {
-                sb.append(mContext.getText(
-                        com.android.internal.R.string.mmiError));
+               /* sb.append(mContext.getText(
+                        com.android.internal.R.string.mmiError));*/
             }
         } else if (isActivate()) {
             mState = State.COMPLETE;
             if (mIsCallFwdReg) {
-                sb.append(mContext.getText(
-                        com.android.internal.R.string.serviceRegistered));
+               /* sb.append(mContext.getText(
+                        com.android.internal.R.string.serviceRegistered));*/
             } else {
-                sb.append(mContext.getText(
-                        com.android.internal.R.string.serviceEnabled));
+             /*   sb.append(mContext.getText(
+                        com.android.internal.R.string.serviceEnabled));*/
             }
             // Record CLIR setting
             if (mSc.equals(SC_CLIR)) {
@@ -1080,24 +1096,24 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             }
         } else if (isDeactivate()) {
             mState = State.COMPLETE;
-            sb.append(mContext.getText(
-                    com.android.internal.R.string.serviceDisabled));
+           /* sb.append(mContext.getText(
+                    com.android.internal.R.string.serviceDisabled));*/
             // Record CLIR setting
             if (mSc.equals(SC_CLIR)) {
                 mPhone.saveClirSetting(CommandsInterface.CLIR_SUPPRESSION);
             }
         } else if (isRegister()) {
             mState = State.COMPLETE;
-            sb.append(mContext.getText(
-                    com.android.internal.R.string.serviceRegistered));
+           /* sb.append(mContext.getText(
+                    com.android.internal.R.string.serviceRegistered));*/
         } else if (isErasure()) {
             mState = State.COMPLETE;
-            sb.append(mContext.getText(
-                    com.android.internal.R.string.serviceErased));
+          /*  sb.append(mContext.getText(
+                    com.android.internal.R.string.serviceErased));*/
         } else {
             mState = State.FAILED;
-            sb.append(mContext.getText(
-                    com.android.internal.R.string.mmiError));
+          /*  sb.append(mContext.getText(
+                    com.android.internal.R.string.mmiError));*/
         }
 
         mMessage = sb;
@@ -1120,20 +1136,20 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             // the 'm' parameter from TS 27.007 7.7
             switch (clirArgs[1]) {
                 case 0: // CLIR not provisioned
-                    sb.append(mContext.getText(
-                                com.android.internal.R.string.serviceNotProvisioned));
+                 /*   sb.append(mContext.getText(
+                                com.android.internal.R.string.serviceNotProvisioned));*/
                     mState = State.COMPLETE;
                 break;
 
                 case 1: // CLIR provisioned in permanent mode
-                    sb.append(mContext.getText(
-                                com.android.internal.R.string.CLIRPermanent));
+                   /* sb.append(mContext.getText(
+                                com.android.internal.R.string.CLIRPermanent));*/
                     mState = State.COMPLETE;
                 break;
 
                 case 2: // unknown (e.g. no network, etc.)
-                    sb.append(mContext.getText(
-                                com.android.internal.R.string.mmiError));
+                  /*  sb.append(mContext.getText(
+                                com.android.internal.R.string.mmiError));*/
                     mState = State.FAILED;
                 break;
 
@@ -1143,16 +1159,16 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                     switch (clirArgs[0]) {
                         default:
                         case 0: // Default
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.CLIRDefaultOnNextCallOn));
+                          /*  sb.append(mContext.getText(
+                                    com.android.internal.R.string.CLIRDefaultOnNextCallOn));*/
                         break;
                         case 1: // CLIR invocation
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.CLIRDefaultOnNextCallOn));
+                        /*    sb.append(mContext.getText(
+                                    com.android.internal.R.string.CLIRDefaultOnNextCallOn));*/
                         break;
                         case 2: // CLIR suppression
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.CLIRDefaultOnNextCallOff));
+                        /*    sb.append(mContext.getText(
+                                    com.android.internal.R.string.CLIRDefaultOnNextCallOff));*/
                         break;
                     }
                     mState = State.COMPLETE;
@@ -1163,16 +1179,16 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                     switch (clirArgs[0]) {
                         default:
                         case 0: // Default
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.CLIRDefaultOffNextCallOff));
+                            /*sb.append(mContext.getText(
+                                    com.android.internal.R.string.CLIRDefaultOffNextCallOff));*/
                         break;
                         case 1: // CLIR invocation
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.CLIRDefaultOffNextCallOn));
+                           /* sb.append(mContext.getText(
+                                    com.android.internal.R.string.CLIRDefaultOffNextCallOn));*/
                         break;
                         case 2: // CLIR suppression
-                            sb.append(mContext.getText(
-                                    com.android.internal.R.string.CLIRDefaultOffNextCallOff));
+                           /* sb.append(mContext.getText(
+                                    com.android.internal.R.string.CLIRDefaultOffNextCallOff));*/
                         break;
                     }
 
@@ -1195,21 +1211,21 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     serviceClassToCFString (int serviceClass) {
         switch (serviceClass) {
             case SERVICE_CLASS_VOICE:
-                return mContext.getText(com.android.internal.R.string.serviceClassVoice);
+                return/* mContext.getText(com.android.internal.R.string.serviceClassVoice)*/ "";
             case SERVICE_CLASS_DATA:
-                return mContext.getText(com.android.internal.R.string.serviceClassData);
+                return/* mContext.getText(com.android.internal.R.string.serviceClassData)*/"";
             case SERVICE_CLASS_FAX:
-                return mContext.getText(com.android.internal.R.string.serviceClassFAX);
+                return /*mContext.getText(com.android.internal.R.string.serviceClassFAX)*/"";
             case SERVICE_CLASS_SMS:
-                return mContext.getText(com.android.internal.R.string.serviceClassSMS);
+                return /*mContext.getText(com.android.internal.R.string.serviceClassSMS)*/"";
             case SERVICE_CLASS_DATA_SYNC:
-                return mContext.getText(com.android.internal.R.string.serviceClassDataSync);
-            case SERVICE_CLASS_DATA_ASYNC:
+                return /*mContext.getText(com.android.internal.R.string.serviceClassDataSync)*/"";
+          /*  case SERVICE_CLASS_DATA_ASYNC:
                 return mContext.getText(com.android.internal.R.string.serviceClassDataAsync);
             case SERVICE_CLASS_PACKET:
                 return mContext.getText(com.android.internal.R.string.serviceClassPacket);
             case SERVICE_CLASS_PAD:
-                return mContext.getText(com.android.internal.R.string.serviceClassPAD);
+                return mContext.getText(com.android.internal.R.string.serviceClassPAD);*/
             default:
                 return null;
         }
@@ -1232,25 +1248,25 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
         if (info.status == 1) {
             if (needTimeTemplate) {
-                template = mContext.getText(
-                        com.android.internal.R.string.cfTemplateForwardedTime);
+                template =/* mContext.getText(
+                        com.android.internal.R.string.cfTemplateForwardedTime)*/"";
             } else {
-                template = mContext.getText(
-                        com.android.internal.R.string.cfTemplateForwarded);
+                template = /*mContext.getText(
+                        com.android.internal.R.string.cfTemplateForwarded)*/"";
             }
         } else if (info.status == 0 && isEmptyOrNull(info.number)) {
-            template = mContext.getText(
-                        com.android.internal.R.string.cfTemplateNotForwarded);
+            template =/* mContext.getText(
+                        com.android.internal.R.string.cfTemplateNotForwarded)*/"";
         } else { /* (info.status == 0) && !isEmptyOrNull(info.number) */
             // A call forward record that is not active but contains
             // a phone number is considered "registered"
 
             if (needTimeTemplate) {
-                template = mContext.getText(
-                        com.android.internal.R.string.cfTemplateRegisteredTime);
+                template = /*mContext.getText(
+                        com.android.internal.R.string.cfTemplateRegisteredTime)*/"";
             } else {
-                template = mContext.getText(
-                        com.android.internal.R.string.cfTemplateRegistered);
+                template =/* mContext.getText(
+                        com.android.internal.R.string.cfTemplateRegistered)*/"";
             }
         }
 
@@ -1291,7 +1307,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
             if (infos.length == 0) {
                 // Assume the default is not active
-                sb.append(mContext.getText(com.android.internal.R.string.serviceDisabled));
+                sb.append(/*mContext.getText(com.android.internal.R.string.serviceDisabled)*/"");
 
                 // Set unconditional CFF in SIM to false
                 if (mIccRecords != null) {
@@ -1343,7 +1359,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
             if (ints.length != 0) {
                 if (ints[0] == 0) {
-                    sb.append(mContext.getText(com.android.internal.R.string.serviceDisabled));
+                    /*sb.append(mContext.getText(com.android.internal.R.string.serviceDisabled));*/
                 } else if (mSc.equals(SC_WAIT)) {
                     // Call Waiting includes additional data in the response.
                     sb.append(createQueryCallWaitingResultMessage(ints[1]));
@@ -1352,12 +1368,12 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                     sb.append(createQueryCallBarringResultMessage(ints[0]));
                 } else if (ints[0] == 1) {
                     // for all other services, treat it as a boolean
-                    sb.append(mContext.getText(com.android.internal.R.string.serviceEnabled));
+                  /*  sb.append(mContext.getText(com.android.internal.R.string.serviceEnabled));*/
                 } else {
-                    sb.append(mContext.getText(com.android.internal.R.string.mmiError));
+                   /* sb.append(mContext.getText(com.android.internal.R.string.mmiError));*/
                 }
             } else {
-                sb.append(mContext.getText(com.android.internal.R.string.mmiError));
+               /* sb.append(mContext.getText(com.android.internal.R.string.mmiError));*/
             }
             mState = State.COMPLETE;
         }
@@ -1369,7 +1385,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     private CharSequence
     createQueryCallWaitingResultMessage(int serviceClass) {
         StringBuilder sb =
-                new StringBuilder(mContext.getText(com.android.internal.R.string.serviceEnabledFor));
+                new StringBuilder(/*mContext.getText(com.android.internal.R.string.serviceEnabledFor)*/);
 
         for (int classMask = 1
                     ; classMask <= SERVICE_CLASS_MAX
@@ -1385,7 +1401,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     private CharSequence
     createQueryCallBarringResultMessage(int serviceClass)
     {
-        StringBuilder sb = new StringBuilder(mContext.getText(com.android.internal.R.string.serviceEnabledFor));
+        StringBuilder sb = new StringBuilder(/*mContext.getText(com.android.internal.R.string.serviceEnabledFor)*/);
 
         for (int classMask = 1
                     ; classMask <= SERVICE_CLASS_MAX

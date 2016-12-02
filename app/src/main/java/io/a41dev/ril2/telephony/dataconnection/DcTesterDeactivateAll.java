@@ -22,14 +22,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
-import android.telephony.Rlog;
+import android.util.Log;
 
-import com.android.internal.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.PhoneBase;
 
 /**
  * To bring down all DC's send the following intent:
  *
- * adb shell am broadcast -a com.android.internal.telephony.dataconnection.action_deactivate_all
+ * adb shell am broadcast -a io.a41dev.ril2.telephony.dataconnection.action_deactivate_all
  */
 public class DcTesterDeactivateAll {
     private static final String LOG_TAG = "DcTesterDeacativeAll";
@@ -39,7 +39,7 @@ public class DcTesterDeactivateAll {
     private DcController mDcc;
 
     public static String sActionDcTesterDeactivateAll =
-            "com.android.internal.telephony.dataconnection.action_deactivate_all";
+            "io.a41dev.ril2.telephony.dataconnection.action_deactivate_all";
 
 
     // The static intent receiver one for all instances and we assume this
@@ -69,7 +69,7 @@ public class DcTesterDeactivateAll {
         mPhone = phone;
         mDcc = dcc;
 
-        if (Build.IS_DEBUGGABLE) {
+        if (true) {
             IntentFilter filter = new IntentFilter();
 
             filter.addAction(sActionDcTesterDeactivateAll);
@@ -83,12 +83,12 @@ public class DcTesterDeactivateAll {
     }
 
     void dispose() {
-        if (Build.IS_DEBUGGABLE) {
+        if (true) {
             mPhone.getContext().unregisterReceiver(sIntentReceiver);
         }
     }
 
     private static void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 }

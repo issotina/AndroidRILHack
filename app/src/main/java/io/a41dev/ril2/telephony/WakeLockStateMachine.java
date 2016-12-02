@@ -19,6 +19,7 @@ package io.a41dev.ril2.telephony;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.util.Log;
@@ -36,6 +37,7 @@ import io.a41dev.ril2.StateMachine;
  */
 public abstract class WakeLockStateMachine extends StateMachine {
     protected static final boolean DBG = true;    // TODO: change to false
+    private static final Handler handler = null;
 
     private final PowerManager.WakeLock mWakeLock;
 
@@ -57,12 +59,12 @@ public abstract class WakeLockStateMachine extends StateMachine {
     /** Wakelock release delay when returning to idle state. */
     private static final int WAKE_LOCK_TIMEOUT = 3000;
 
-    private final DefaultState mDefaultState = new DefaultState();
+    /*private final RilMessageDecoder.StateCmdParamsReady mDefaultState = new DefaultState();*/
     private final IdleState mIdleState = new IdleState();
     private final WaitingState mWaitingState = new WaitingState();
 
     protected WakeLockStateMachine(String debugTag, Context context, PhoneBase phone) {
-        super(debugTag);
+        super(debugTag, handler);
 
         mContext = context;
         mPhone = phone;
@@ -71,10 +73,10 @@ public abstract class WakeLockStateMachine extends StateMachine {
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, debugTag);
         mWakeLock.acquire();    // wake lock released after we enter idle state
 
-        addState(mDefaultState);
+      /*  addState(mDefaultState);
         addState(mIdleState, mDefaultState);
-        addState(mWaitingState, mDefaultState);
-        setInitialState(mIdleState);
+        addState(mWaitingState, mDefaultState);*/
+      //  setInitialState(mIdleState);
     }
 
     public void updatePhoneObject(PhoneBase phone) {
@@ -108,7 +110,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
      * This parent state throws an exception (for debug builds) or prints an error for unhandled
      * message types.
      */
-    class DefaultState extends State {
+    public class DefaultState extends State {
         @Override
         public boolean processMessage(Message msg) {
             switch (msg.what) {
@@ -228,7 +230,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
      * Log with debug level.
      * @param s the string to log
      */
-    @Override
+
     protected void log(String s) {
         Log.d(getName(), s);
     }
@@ -237,7 +239,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
      * Log with error level.
      * @param s the string to log
      */
-    @Override
+
     protected void loge(String s) {
         Log.e(getName(), s);
     }
@@ -247,7 +249,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
      * @param s the string to log
      * @param e is a Throwable which logs additional information.
      */
-    @Override
+
     protected void loge(String s, Throwable e) {
         Log.e(getName(), s, e);
     }

@@ -17,17 +17,17 @@
 package io.a41dev.ril2.telephony.uicc;
 
 import android.content.Context;
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Registrant;
-import android.os.RegistrantList;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.CommandsInterface;
+import android.util.Log;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.Registrant;
+import io.a41dev.ril2.telephony.RegistrantList;
 
 /**
  * This class is responsible for keeping all knowledge about
@@ -66,8 +66,6 @@ import java.io.PrintWriter;
  * Legend: # stands for Composition
  *         ^ stands for Generalization
  *
- * See also {@link com.android.internal.telephony.IccCard}
- * and {@link com.android.internal.telephony.uicc.IccCardProxy}
  */
 public class UiccController extends Handler {
     private static final boolean DBG = true;
@@ -182,7 +180,7 @@ public class UiccController extends Handler {
                     onGetIccCardStatusDone(ar);
                     break;
                 default:
-                    Rlog.e(LOG_TAG, " Unknown Event " + msg.what);
+                    Log.e(LOG_TAG, " Unknown Event " + msg.what);
             }
         }
     }
@@ -198,7 +196,7 @@ public class UiccController extends Handler {
 
     private synchronized void onGetIccCardStatusDone(AsyncResult ar) {
         if (ar.exception != null) {
-            Rlog.e(LOG_TAG,"Error getting ICC status. "
+            Log.e(LOG_TAG,"Error getting ICC status. "
                     + "RIL_REQUEST_GET_ICC_STATUS should "
                     + "never return an error", ar.exception);
             return;
@@ -219,7 +217,7 @@ public class UiccController extends Handler {
     }
 
     private void log(String string) {
-        Rlog.d(LOG_TAG, string);
+        Log.d(LOG_TAG, string);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

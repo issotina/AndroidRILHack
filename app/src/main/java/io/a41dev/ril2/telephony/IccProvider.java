@@ -17,21 +17,18 @@
 package io.a41dev.ril2.telephony;
 
 import android.content.ContentProvider;
-import android.content.UriMatcher;
 import android.content.ContentValues;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
-import android.os.RemoteException;
-import android.os.ServiceManager;
 import android.text.TextUtils;
-import android.telephony.Rlog;
+import android.util.Log;
 
 import java.util.List;
 
-import com.android.internal.telephony.IIccPhoneBook;
-import com.android.internal.telephony.uicc.AdnRecord;
-import com.android.internal.telephony.uicc.IccConstants;
+import io.a41dev.ril2.telephony.uicc.AdnRecord;
+import io.a41dev.ril2.telephony.uicc.IccConstants;
 
 
 /**
@@ -284,17 +281,7 @@ public class IccProvider extends ContentProvider {
         if (DBG) log("loadFromEf: efType=" + efType);
 
         List<AdnRecord> adnRecords = null;
-        try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
-            if (iccIpb != null) {
-                adnRecords = iccIpb.getAdnRecordsInEf(efType);
-            }
-        } catch (RemoteException ex) {
-            // ignore it
-        } catch (SecurityException ex) {
-            if (DBG) log(ex.toString());
-        }
+
 
         if (adnRecords != null) {
             // Load the results
@@ -307,7 +294,7 @@ public class IccProvider extends ContentProvider {
             return cursor;
         } else {
             // No results to load
-            Rlog.w(TAG, "Cannot load ADN records");
+            Log.w(TAG, "Cannot load ADN records");
             return new MatrixCursor(ADDRESS_BOOK_COLUMN_NAMES);
         }
     }
@@ -324,18 +311,7 @@ public class IccProvider extends ContentProvider {
         // the UI level logic to fill that prereq if necessary. But
         // hopefully, we can remove this requirement.
 
-        try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
-            if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType, "", "",
-                        name, number, pin2);
-            }
-        } catch (RemoteException ex) {
-            // ignore it
-        } catch (SecurityException ex) {
-            if (DBG) log(ex.toString());
-        }
+
         if (DBG) log("addIccRecordToEf: " + success);
         return success;
     }
@@ -348,18 +324,7 @@ public class IccProvider extends ContentProvider {
                 ", newname=" + newName + ", newnumber=" + newNumber);
         boolean success = false;
 
-        try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
-            if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType,
-                        oldName, oldNumber, newName, newNumber, pin2);
-            }
-        } catch (RemoteException ex) {
-            // ignore it
-        } catch (SecurityException ex) {
-            if (DBG) log(ex.toString());
-        }
+
         if (DBG) log("updateIccRecordInEf: " + success);
         return success;
     }
@@ -372,18 +337,6 @@ public class IccProvider extends ContentProvider {
 
         boolean success = false;
 
-        try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
-            if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType,
-                        name, number, "", "", pin2);
-            }
-        } catch (RemoteException ex) {
-            // ignore it
-        } catch (SecurityException ex) {
-            if (DBG) log(ex.toString());
-        }
         if (DBG) log("deleteIccRecordFromEf: " + success);
         return success;
     }
@@ -420,7 +373,7 @@ public class IccProvider extends ContentProvider {
     }
 
     private void log(String msg) {
-        Rlog.d(TAG, "[IccProvider] " + msg);
+        Log.d(TAG, "[IccProvider] " + msg);
     }
 
 }

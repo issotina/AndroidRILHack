@@ -17,27 +17,19 @@
 package io.a41dev.ril2.telephony;
 
 import android.Manifest;
-import android.app.AppOpsManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.os.AsyncResult;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Message;
-import android.os.ServiceManager;
-import android.telephony.Rlog;
 import android.util.Log;
 
-import com.android.internal.telephony.ISms;
-import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
-import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
-import com.android.internal.telephony.uicc.IccConstants;
-import com.android.internal.telephony.uicc.IccFileHandler;
-import com.android.internal.util.HexDump;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+
+import io.a41dev.ril2.telephony.cdma.CdmaSmsBroadcastConfigInfo;
+import io.a41dev.ril2.telephony.gsm.SmsBroadcastConfigInfo;
+import io.a41dev.ril2.telephony.uicc.IccConstants;
+import io.a41dev.ril2.telephony.uicc.IccFileHandler;
 
 import static android.telephony.SmsManager.STATUS_ON_ICC_FREE;
 import static android.telephony.SmsManager.STATUS_ON_ICC_READ;
@@ -47,7 +39,7 @@ import static android.telephony.SmsManager.STATUS_ON_ICC_UNREAD;
  * IccSmsInterfaceManager to provide an inter-process communication to
  * access Sms in Icc.
  */
-public class IccSmsInterfaceManager extends ISms.Stub {
+public class IccSmsInterfaceManager/* extends ISms.Stub*/ {
     static final String LOG_TAG = "IccSmsInterfaceManager";
     static final boolean DBG = true;
 
@@ -69,7 +61,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
 
     protected PhoneBase mPhone;
     final protected Context mContext;
-    final protected AppOpsManager mAppOps;
+   /* final protected AppOpsManager mAppOps;*/
     protected SMSDispatcher mDispatcher;
 
     protected Handler mHandler = new Handler() {
@@ -93,7 +85,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
                             //Mark SMS as read after importing it from card.
                             markMessagesAsRead((ArrayList<byte[]>) ar.result);
                         } else {
-                            if (Rlog.isLoggable("SMS", Log.DEBUG)) {
+                            if (Log.isLoggable("SMS", Log.DEBUG)) {
                                 log("Cannot load Sms records");
                             }
                             if (mSms != null)
@@ -117,12 +109,12 @@ public class IccSmsInterfaceManager extends ISms.Stub {
     protected IccSmsInterfaceManager(PhoneBase phone) {
         mPhone = phone;
         mContext = phone.getContext();
-        mAppOps = (AppOpsManager) mContext.getSystemService(Context.APP_OPS_SERVICE);
+     /*   mAppOps = (AppOpsManager) mContext.getSystemService(Context.APP_OPS_SERVICE);
         mDispatcher = new ImsSMSDispatcher(phone,
                 phone.mSmsStorageMonitor, phone.mSmsUsageMonitor);
         if (ServiceManager.getService("isms") == null) {
             ServiceManager.addService("isms", this);
-        }
+        }*/
     }
 
     protected void markMessagesAsRead(ArrayList<byte[]> messages) {
@@ -135,7 +127,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         if (fh == null) {
             //shouldn't really happen, as messages are marked as read, only
             //after importing it from icc.
-            if (Rlog.isLoggable("SMS", Log.DEBUG)) {
+            if (Log.isLoggable("SMS", Log.DEBUG)) {
                 log("markMessagesAsRead - aborting, no icc card present.");
             }
             return;
@@ -151,7 +143,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
                  System.arraycopy(ba, 1, nba, 0, n - 1);
                  byte[] record = makeSmsRecordData(STATUS_ON_ICC_READ, nba);
                  fh.updateEFLinearFixed(IccConstants.EF_SMS, i + 1, record, null, null);
-                 if (Rlog.isLoggable("SMS", Log.DEBUG)) {
+                 if (Log.isLoggable("SMS", Log.DEBUG)) {
                      log("SMS " + (i + 1) + " marked as read");
                  }
              }
@@ -181,9 +173,8 @@ public class IccSmsInterfaceManager extends ISms.Stub {
      * @return success or not
      *
      */
-    @Override
-    public boolean
-    updateMessageOnIccEf(String callingPackage, int index, int status, byte[] pdu) {
+ /*   @Override
+    public boolean  updateMessageOnIccEf(String callingPackage, int index, int status, byte[] pdu) {
         if (DBG) log("updateMessageOnIccEf: index=" + index +
                 " status=" + status + " ==> " +
                 "("+ Arrays.toString(pdu) + ")");
@@ -211,7 +202,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
                 IccFileHandler fh = mPhone.getIccFileHandler();
                 if (fh == null) {
                     response.recycle();
-                    return mSuccess; /* is false */
+                    return mSuccess; *//* is false *//*
                 }
                 byte[] record = makeSmsRecordData(status, pdu);
                 fh.updateEFLinearFixed(
@@ -227,7 +218,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         return mSuccess;
     }
 
-    /**
+    *//**
      * Copy a raw SMS PDU to the Icc.
      *
      * @param pdu the raw PDU to store
@@ -235,7 +226,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
      *               STATUS_ON_ICC_SENT, STATUS_ON_ICC_UNSENT)
      * @return success or not
      *
-     */
+     *//*
     @Override
     public boolean copyMessageToIccEf(String callingPackage, int status, byte[] pdu, byte[] smsc) {
         //NOTE smsc not used in RUIM
@@ -269,11 +260,11 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         return mSuccess;
     }
 
-    /**
+    *//**
      * Retrieves all messages currently stored on Icc.
      *
      * @return list of SmsRawData of all sms on Icc
-     */
+     *//*
     @Override
     public List<SmsRawData> getAllMessagesFromIccEf(String callingPackage) {
         if (DBG) log("getAllMessagesFromEF");
@@ -289,7 +280,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
 
             IccFileHandler fh = mPhone.getIccFileHandler();
             if (fh == null) {
-                Rlog.e(LOG_TAG, "Cannot load Sms records. No icc card?");
+                Log.e(LOG_TAG, "Cannot load Sms records. No icc card?");
                 if (mSms != null) {
                     mSms.clear();
                     return mSms;
@@ -308,7 +299,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         return mSms;
     }
 
-    /**
+    *//**
      * Send a data based SMS to a specific application port.
      *
      * @param destAddr the address to send the message to
@@ -332,14 +323,14 @@ public class IccSmsInterfaceManager extends ISms.Stub {
      * @param deliveryIntent if not NULL this <code>PendingIntent</code> is
      *  broadcast when the message is delivered to the recipient.  The
      *  raw pdu of the status report is in the extended data ("pdu").
-     */
+     *//*
     @Override
     public void sendData(String callingPackage, String destAddr, String scAddr, int destPort,
             byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent) {
         mPhone.getContext().enforceCallingPermission(
                 Manifest.permission.SEND_SMS,
                 "Sending SMS message");
-        if (Rlog.isLoggable("SMS", Log.VERBOSE)) {
+        if (Log.isLoggable("SMS", Log.VERBOSE)) {
             log("sendData: destAddr=" + destAddr + " scAddr=" + scAddr + " destPort=" +
                 destPort + " data='"+ HexDump.toHexString(data)  + "' sentIntent=" +
                 sentIntent + " deliveryIntent=" + deliveryIntent);
@@ -351,7 +342,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         mDispatcher.sendData(destAddr, scAddr, destPort, data, sentIntent, deliveryIntent);
     }
 
-    /**
+    *//**
      * Send a text based SMS.
      *
      * @param destAddr the address to send the message to
@@ -374,14 +365,14 @@ public class IccSmsInterfaceManager extends ISms.Stub {
      * @param deliveryIntent if not NULL this <code>PendingIntent</code> is
      *  broadcast when the message is delivered to the recipient.  The
      *  raw pdu of the status report is in the extended data ("pdu").
-     */
+     *//*
     @Override
     public void sendText(String callingPackage, String destAddr, String scAddr,
             String text, PendingIntent sentIntent, PendingIntent deliveryIntent) {
         mPhone.getContext().enforceCallingPermission(
                 Manifest.permission.SEND_SMS,
                 "Sending SMS message");
-        if (Rlog.isLoggable("SMS", Log.VERBOSE)) {
+        if (Log.isLoggable("SMS", Log.VERBOSE)) {
             log("sendText: destAddr=" + destAddr + " scAddr=" + scAddr +
                 " text='"+ text + "' sentIntent=" +
                 sentIntent + " deliveryIntent=" + deliveryIntent);
@@ -393,7 +384,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         mDispatcher.sendText(destAddr, scAddr, text, sentIntent, deliveryIntent);
     }
 
-    /**
+    *//**
      * Send a multi-part text based SMS.
      *
      * @param destAddr the address to send the message to
@@ -417,7 +408,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
      *   broadcast when the corresponding message part has been delivered
      *   to the recipient.  The raw pdu of the status report is in the
      *   extended data ("pdu").
-     */
+     *//*
     @Override
     public void sendMultipartText(String callingPackage, String destAddr, String scAddr,
             List<String> parts, List<PendingIntent> sentIntents,
@@ -425,7 +416,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         mPhone.getContext().enforceCallingPermission(
                 Manifest.permission.SEND_SMS,
                 "Sending SMS message");
-        if (Rlog.isLoggable("SMS", Log.VERBOSE)) {
+        if (Log.isLoggable("SMS", Log.VERBOSE)) {
             int i = 0;
             for (String part : parts) {
                 log("sendMultipartText: destAddr=" + destAddr + ", srAddr=" + scAddr +
@@ -449,7 +440,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
     public void setPremiumSmsPermission(String packageName, int permission) {
         mDispatcher.setPremiumSmsPermission(packageName, permission);
     }
-
+*/
     /**
      * create SmsRawData lists from all sms record byte[]
      * Use null to indicate "free" record
@@ -468,7 +459,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
             if (ba[0] == STATUS_ON_ICC_FREE) {
                 ret.add(null);
             } else {
-                ret.add(new SmsRawData(messages.get(i)));
+                ret.add(new SmsRawData());
             }
         }
 
@@ -498,13 +489,13 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         return data;
     }
 
-    public boolean enableCellBroadcast(int messageIdentifier) {
+   /* public boolean enableCellBroadcast(int messageIdentifier) {
         return enableCellBroadcastRange(messageIdentifier, messageIdentifier);
     }
 
     public boolean disableCellBroadcast(int messageIdentifier) {
         return disableCellBroadcastRange(messageIdentifier, messageIdentifier);
-    }
+    }*/
 
     public boolean enableCellBroadcastRange(int startMessageId, int endMessageId) {
         if (PhoneConstants.PHONE_TYPE_GSM == mPhone.getPhoneType()) {

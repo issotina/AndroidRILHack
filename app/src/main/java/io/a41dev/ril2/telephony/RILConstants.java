@@ -100,7 +100,7 @@ public interface RILConstants {
 cat include/telephony/ril.h | \
    egrep '^#define' | \
    sed -re 's/^#define +([^ ]+)* +([^ ]+)/    int \1 = \2;/' \
-   >>java/android/com.android.internal.telephony/gsm/RILConstants.java
+   >>java/android/io.a41dev.ril2.telephony/gsm/RILConstants.java
 */
     /**
      * No restriction at all including voice/SMS/USSD/SS/AV64

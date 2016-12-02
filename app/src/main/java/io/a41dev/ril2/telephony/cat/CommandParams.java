@@ -22,10 +22,10 @@ import android.graphics.Bitmap;
  * Container class for proactive command parameters.
  *
  */
-class CommandParams {
+public class CommandParams {
     CommandDetails mCmdDet;
 
-    CommandParams(CommandDetails cmdDet) {
+    public CommandParams(CommandDetails cmdDet) {
         mCmdDet = cmdDet;
     }
 
@@ -38,24 +38,6 @@ class CommandParams {
     @Override
     public String toString() {
         return mCmdDet.toString();
-    }
-}
-
-class DisplayTextParams extends CommandParams {
-    TextMessage mTextMsg;
-
-    DisplayTextParams(CommandDetails cmdDet, TextMessage textMsg) {
-        super(cmdDet);
-        mTextMsg = textMsg;
-    }
-
-    @Override
-    boolean setIcon(Bitmap icon) {
-        if (icon != null && mTextMsg != null) {
-            mTextMsg.icon = icon;
-            return true;
-        }
-        return false;
     }
 }
 

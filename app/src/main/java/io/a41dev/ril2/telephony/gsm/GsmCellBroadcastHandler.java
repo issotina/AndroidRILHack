@@ -17,20 +17,20 @@
 package io.a41dev.ril2.telephony.gsm;
 
 import android.content.Context;
-import android.os.AsyncResult;
 import android.os.Message;
-import android.os.SystemProperties;
 import android.telephony.CellLocation;
-import android.telephony.SmsCbLocation;
-import android.telephony.SmsCbMessage;
 import android.telephony.gsm.GsmCellLocation;
-
-import com.android.internal.telephony.CellBroadcastHandler;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.TelephonyProperties;
 
 import java.util.HashMap;
 import java.util.Iterator;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.TelephonyProperties;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CellBroadcastHandler;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.SmsCbLocation;
+import io.a41dev.ril2.telephony.SmsCbMessage;
 
 /**
  * Handler for 3GPP format Cell Broadcasts. Parent class can also handle CDMA Cell Broadcasts.

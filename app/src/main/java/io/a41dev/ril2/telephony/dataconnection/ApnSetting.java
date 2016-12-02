@@ -16,8 +16,8 @@
 
 package io.a41dev.ril2.telephony.dataconnection;
 
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.RILConstants;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.RILConstants;
 
 /**
  * This class represents a apn setting for create PDP link

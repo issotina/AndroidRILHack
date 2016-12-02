@@ -16,10 +16,11 @@
 
 package io.a41dev.ril2.telephony.gsm;
 
-import android.telephony.SmsCbCmasInfo;
-import android.telephony.SmsCbEtwsInfo;
 
 import java.util.Arrays;
+
+import io.a41dev.ril2.telephony.SmsCbCmasInfo;
+import io.a41dev.ril2.telephony.SmsCbEtwsInfo;
 
 /**
  * Parses a 3GPP TS 23.041 cell broadcast message header. This class is public for use by

@@ -82,12 +82,7 @@ public class SmsBroadcastUndelivered implements Runnable {
         if (DBG) Log.d(TAG, "scanning raw table for undelivered messages");
         scanRawTable();
         // tell handlers to start processing new messages
-        if (mGsmInboundSmsHandler != null) {
-            mGsmInboundSmsHandler.sendMessage(InboundSmsHandler.EVENT_START_ACCEPTING_SMS);
-        }
-        if (mCdmaInboundSmsHandler != null) {
-            mCdmaInboundSmsHandler.sendMessage(InboundSmsHandler.EVENT_START_ACCEPTING_SMS);
-        }
+
     }
 
     /**
@@ -171,16 +166,7 @@ public class SmsBroadcastUndelivered implements Runnable {
      */
     private void broadcastSms(InboundSmsTracker tracker) {
         InboundSmsHandler handler;
-        if (tracker.is3gpp2()) {
-            handler = mCdmaInboundSmsHandler;
-        } else {
-            handler = mGsmInboundSmsHandler;
-        }
-        if (handler != null) {
-            handler.sendMessage(InboundSmsHandler.EVENT_BROADCAST_SMS, tracker);
-        } else {
-            Log.e(TAG, "null handler for " + tracker.getFormat() + " format, can't deliver.");
-        }
+       
     }
 
     /**

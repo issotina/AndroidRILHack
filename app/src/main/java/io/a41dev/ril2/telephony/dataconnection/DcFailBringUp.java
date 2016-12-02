@@ -17,7 +17,7 @@
 package io.a41dev.ril2.telephony.dataconnection;
 
 import android.content.Intent;
-import android.telephony.Rlog;
+import android.util.Log;
 
 /**
  * A package visible class for supporting testing failing bringUp commands. This
@@ -75,6 +75,6 @@ class DcFailBringUp {
     }
 
     private static void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 }

@@ -18,7 +18,7 @@ package io.a41dev.ril2.telephony.test;
 
 import android.os.HandlerThread;
 import android.os.Looper;
-import android.telephony.Rlog;
+import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -204,7 +204,7 @@ public class ModelInterpreter
                 try {
                     s = mSS.accept();
                 } catch (IOException ex) {
-                    Rlog.w(LOG_TAG,
+                    Log.w(LOG_TAG,
                         "IOException on socket.accept(); stopping", ex);
                     return;
                 }
@@ -213,12 +213,12 @@ public class ModelInterpreter
                     mIn = s.getInputStream();
                     mOut = s.getOutputStream();
                 } catch (IOException ex) {
-                    Rlog.w(LOG_TAG,
+                    Log.w(LOG_TAG,
                         "IOException on accepted socket(); re-listening", ex);
                     continue;
                 }
 
-                Rlog.i(LOG_TAG, "New connection accepted");
+                Log.i(LOG_TAG, "New connection accepted");
             }
 
 
@@ -260,7 +260,7 @@ public class ModelInterpreter
                 }
             }
 
-            Rlog.i(LOG_TAG, "Disconnected");
+            Log.i(LOG_TAG, "Disconnected");
 
             if (mSS == null) {
                 // no reconnect in this case

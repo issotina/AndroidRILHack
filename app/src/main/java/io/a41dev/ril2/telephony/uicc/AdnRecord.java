@@ -20,11 +20,11 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.GsmAlphabet;
+import android.util.Log;
 
 import java.util.Arrays;
+
+import io.a41dev.ril2.telephony.GsmAlphabet;
 
 
 /**
@@ -80,14 +80,15 @@ public class AdnRecord implements Parcelable {
             String alphaTag;
             String number;
             String[] emails;
+            String[] ss = new String[4];
 
             efid = source.readInt();
             recordNumber = source.readInt();
             alphaTag = source.readString();
             number = source.readString();
-            emails = source.readStringArray();
+            /*emails = source.readStringArray(ss);*/
 
-            return new AdnRecord(efid, recordNumber, alphaTag, number, emails);
+            return new AdnRecord(efid, recordNumber, alphaTag, number, null);
         }
 
         @Override
@@ -219,15 +220,15 @@ public class AdnRecord implements Parcelable {
         }
 
         if (TextUtils.isEmpty(mNumber)) {
-            Rlog.w(LOG_TAG, "[buildAdnString] Empty dialing number");
+            Log.w(LOG_TAG, "[buildAdnString] Empty dialing number");
             return adnString;   // return the empty record (for delete)
         } else if (mNumber.length()
                 > (ADN_DIALING_NUMBER_END - ADN_DIALING_NUMBER_START + 1) * 2) {
-            Rlog.w(LOG_TAG,
+            Log.w(LOG_TAG,
                     "[buildAdnString] Max length of dialing number is 20");
             return null;
         } else if (mAlphaTag != null && mAlphaTag.length() > footerOffset) {
-            Rlog.w(LOG_TAG,
+            Log.w(LOG_TAG,
                     "[buildAdnString] Max length of tag is " + footerOffset);
             return null;
         } else {
@@ -278,7 +279,7 @@ public class AdnRecord implements Parcelable {
             // We don't support ext record chaining.
 
         } catch (RuntimeException ex) {
-            Rlog.w(LOG_TAG, "Error parsing AdnRecord ext record", ex);
+            Log.w(LOG_TAG, "Error parsing AdnRecord ext record", ex);
         }
     }
 
@@ -319,7 +320,7 @@ public class AdnRecord implements Parcelable {
             mEmails = null;
 
         } catch (RuntimeException ex) {
-            Rlog.w(LOG_TAG, "Error parsing AdnRecord", ex);
+            Log.w(LOG_TAG, "Error parsing AdnRecord", ex);
             mNumber = "";
             mAlphaTag = "";
             mEmails = null;

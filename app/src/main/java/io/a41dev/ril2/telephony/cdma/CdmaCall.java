@@ -18,11 +18,11 @@ package io.a41dev.ril2.telephony.cdma;
 
 import java.util.List;
 
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.CallStateException;
-import com.android.internal.telephony.Connection;
-import com.android.internal.telephony.DriverCall;
-import com.android.internal.telephony.Phone;
+import io.a41dev.ril2.telephony.Call;
+import io.a41dev.ril2.telephony.CallStateException;
+import io.a41dev.ril2.telephony.Connection;
+import io.a41dev.ril2.telephony.DriverCall;
+import io.a41dev.ril2.telephony.Phone;
 
 /**
  * {@hide}

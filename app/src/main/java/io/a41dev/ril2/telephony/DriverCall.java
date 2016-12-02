@@ -16,9 +16,8 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.telephony.Rlog;
-import java.lang.Comparable;
 import android.telephony.PhoneNumberUtils;
+import android.util.Log;
 
 /**
  * {@hide}
@@ -74,7 +73,7 @@ public class DriverCall implements Comparable<DriverCall> {
             if (p.hasMore()) {
                 // Some lame implementations return strings
                 // like "NOT AVAILABLE" in the CLCC line
-                ret.number = PhoneNumberUtils.extractNetworkPortionAlt(p.nextString());
+                ret.number = /*PhoneNumberUtils.extractNetworkPortionAlt(p.nextString())*/"";
 
                 if (ret.number.length() == 0) {
                     ret.number = null;
@@ -90,7 +89,7 @@ public class DriverCall implements Comparable<DriverCall> {
 
             }
         } catch (ATParseEx ex) {
-            Rlog.e(LOG_TAG,"Invalid CLCC line: '" + line + "'");
+            Log.e(LOG_TAG,"Invalid CLCC line: '" + line + "'");
             return null;
         }
 

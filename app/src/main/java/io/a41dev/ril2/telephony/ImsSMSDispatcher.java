@@ -16,24 +16,14 @@
 
 package io.a41dev.ril2.telephony;
 
-import static android.telephony.SmsManager.RESULT_ERROR_GENERIC_FAILURE;
+import android.app.PendingIntent;
+import android.app.PendingIntent.CanceledException;
+import android.os.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import android.app.PendingIntent;
-import android.app.PendingIntent.CanceledException;
-import android.os.AsyncResult;
-import android.os.Message;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.cdma.CdmaSMSDispatcher;
-import com.android.internal.telephony.gsm.GsmSMSDispatcher;
-import com.android.internal.telephony.InboundSmsHandler;
-import com.android.internal.telephony.gsm.GsmInboundSmsHandler;
-import com.android.internal.telephony.cdma.CdmaInboundSmsHandler;
-import com.android.internal.telephony.SmsBroadcastUndelivered;
+import static android.telephony.SmsManager.RESULT_ERROR_GENERIC_FAILURE;
 
 public final class ImsSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "RIL_ImsSms";
@@ -41,8 +31,8 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     private SMSDispatcher mCdmaDispatcher;
     private SMSDispatcher mGsmDispatcher;
 
-    private GsmInboundSmsHandler mGsmInboundSmsHandler;
-    private CdmaInboundSmsHandler mCdmaInboundSmsHandler;
+   /* private GsmInboundSmsHandler mGsmInboundSmsHandler;
+    private CdmaInboundSmsHandler mCdmaInboundSmsHandler;*/
 
 
     /** true if IMS is registered and sms is supported, false otherwise.*/
@@ -52,7 +42,7 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     public ImsSMSDispatcher(PhoneBase phone, SmsStorageMonitor storageMonitor,
             SmsUsageMonitor usageMonitor) {
         super(phone, usageMonitor, null);
-        Rlog.d(TAG, "ImsSMSDispatcher created");
+       /* Log.d(TAG, "ImsSMSDispatcher created");
 
         // Create dispatchers, inbound SMS handlers and
         // broadcast undelivered messages in raw table.
@@ -63,8 +53,8 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
                 storageMonitor, phone, (CdmaSMSDispatcher) mCdmaDispatcher);
         mGsmDispatcher = new GsmSMSDispatcher(phone, usageMonitor, this, mGsmInboundSmsHandler);
         Thread broadcastThread = new Thread(new SmsBroadcastUndelivered(phone.getContext(),
-                mGsmInboundSmsHandler, mCdmaInboundSmsHandler));
-        broadcastThread.start();
+                mGsmInboundSmsHandler, mCdmaInboundSmsHandler));*/
+     /*   broadcastThread.start();*/
 
         mCi.registerForOn(this, EVENT_RADIO_ON, null);
         mCi.registerForImsNetworkStateChanged(this, EVENT_IMS_STATE_CHANGED, null);
@@ -73,12 +63,12 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     /* Updates the phone object when there is a change */
     @Override
     protected void updatePhoneObject(PhoneBase phone) {
-        Rlog.d(TAG, "In IMS updatePhoneObject ");
+       /* Log.d(TAG, "In IMS updatePhoneObject ");
         super.updatePhoneObject(phone);
         mCdmaDispatcher.updatePhoneObject(phone);
         mGsmDispatcher.updatePhoneObject(phone);
         mGsmInboundSmsHandler.updatePhoneObject(phone);
-        mCdmaInboundSmsHandler.updatePhoneObject(phone);
+        mCdmaInboundSmsHandler.updatePhoneObject(phone);*/
     }
 
     public void dispose() {
@@ -86,8 +76,8 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
         mCi.unregisterForImsNetworkStateChanged(this);
         mGsmDispatcher.dispose();
         mCdmaDispatcher.dispose();
-        mGsmInboundSmsHandler.dispose();
-        mCdmaInboundSmsHandler.dispose();
+        /*mGsmInboundSmsHandler.dispose();
+        mCdmaInboundSmsHandler.dispose();*/
     }
 
     /**
@@ -111,8 +101,8 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
             if (ar.exception == null) {
                 updateImsInfo(ar);
             } else {
-                Rlog.e(TAG, "IMS State query failed with exp "
-                        + ar.exception);
+                /*Log.e(TAG, "IMS State query failed with exp "
+                        + ar.exception);*/
             }
             break;
 
@@ -141,16 +131,16 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
 
         mIms = false;
         if (responseArray[0] == 1) {  // IMS is registered
-            Rlog.d(TAG, "IMS is registered!");
+            /*Log.d(TAG, "IMS is registered!");*/
             mIms = true;
         } else {
-            Rlog.d(TAG, "IMS is NOT registered!");
+           /* Log.d(TAG, "IMS is NOT registered!");*/
         }
 
         setImsSmsFormat(responseArray[1]);
 
         if (("unknown".equals(mImsSmsFormat))) {
-            Rlog.e(TAG, "IMS format was unknown!");
+           /* Log.e(TAG, "IMS format was unknown!");*/
             // failed to retrieve valid IMS SMS format info, set IMS to unregistered
             mIms = false;
         }
@@ -185,13 +175,13 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     protected void sendSms(SmsTracker tracker) {
         //  sendSms is a helper function to other send functions, sendText/Data...
         //  it is not part of ISms.stub
-        Rlog.e(TAG, "sendSms should never be called from here!");
+       /* Log.e(TAG, "sendSms should never be called from here!");*/
     }
 
     @Override
     protected void sendText(String destAddr, String scAddr, String text,
             PendingIntent sentIntent, PendingIntent deliveryIntent) {
-        Rlog.d(TAG, "sendText");
+      /*  Log.d(TAG, "sendText");*/
         if (isCdmaMo()) {
             mCdmaDispatcher.sendText(destAddr, scAddr,
                     text, sentIntent, deliveryIntent);
@@ -214,11 +204,11 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
         // was previously sent sms format match with voice tech?
         if (oldFormat.equals(newFormat)) {
             if (isCdmaFormat(newFormat)) {
-                Rlog.d(TAG, "old format matched new format (cdma)");
+                /*Log.d(TAG, "old format matched new format (cdma)");*/
                 mCdmaDispatcher.sendSms(tracker);
                 return;
             } else {
-                Rlog.d(TAG, "old format matched new format (gsm)");
+              /*  Log.d(TAG, "old format matched new format (gsm)");*/
                 mGsmDispatcher.sendSms(tracker);
                 return;
             }
@@ -234,7 +224,7 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
                ( map.containsKey("text") ||
                        (map.containsKey("data") && map.containsKey("destPort"))))) {
             // should never come here...
-            Rlog.e(TAG, "sendRetrySms failed to re-encode per missing fields!");
+           /* Log.e(TAG, "sendRetrySms failed to re-encode per missing fields!");*/
             if (tracker.mSentIntent != null) {
                 int error = RESULT_ERROR_GENERIC_FAILURE;
                 // Done retrying; return an error to the app.
@@ -250,33 +240,31 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
         SmsMessageBase.SubmitPduBase pdu = null;
         //    figure out from tracker if this was sendText/Data
         if (map.containsKey("text")) {
-            Rlog.d(TAG, "sms failed was text");
+           /* Log.d(TAG, "sms failed was text");*/
             String text = (String)map.get("text");
 
             if (isCdmaFormat(newFormat)) {
-                Rlog.d(TAG, "old format (gsm) ==> new format (cdma)");
-                pdu = com.android.internal.telephony.cdma.SmsMessage.getSubmitPdu(
-                        scAddr, destAddr, text, (tracker.mDeliveryIntent != null), null);
+                /*Log.d(TAG, "old format (gsm) ==> new format (cdma)");*/
+                /*SmsMessage.getSubmitPdu(scAddr, destAddr, text, (tracker.mDeliveryIntent != null), null);*/
             } else {
-                Rlog.d(TAG, "old format (cdma) ==> new format (gsm)");
-                pdu = com.android.internal.telephony.gsm.SmsMessage.getSubmitPdu(
-                        scAddr, destAddr, text, (tracker.mDeliveryIntent != null), null);
+               /* Log.d(TAG, "old format (cdma) ==> new format (gsm)");*/
+                /*SmsMessage.getSubmitPdu(scAddr, destAddr, text, (tracker.mDeliveryIntent != null), null);*/
             }
         } else if (map.containsKey("data")) {
-            Rlog.d(TAG, "sms failed was data");
+         /*   Log.d(TAG, "sms failed was data");*/
             byte[] data = (byte[])map.get("data");
             Integer destPort = (Integer)map.get("destPort");
 
             if (isCdmaFormat(newFormat)) {
-                Rlog.d(TAG, "old format (gsm) ==> new format (cdma)");
-                pdu = com.android.internal.telephony.cdma.SmsMessage.getSubmitPdu(
+               /* Log.d(TAG, "old format (gsm) ==> new format (cdma)");
+                pdu = io.a41dev.ril2.telephony.cdma.SmsMessage.getSubmitPdu(
                             scAddr, destAddr, destPort.intValue(), data,
-                            (tracker.mDeliveryIntent != null));
+                            (tracker.mDeliveryIntent != null));*/
             } else {
-                Rlog.d(TAG, "old format (cdma) ==> new format (gsm)");
-                pdu = com.android.internal.telephony.gsm.SmsMessage.getSubmitPdu(
+            /*    Log.d(TAG, "old format (cdma) ==> new format (gsm)");
+                pdu = io.a41dev.ril2.telephony.gsm.SmsMessage.getSubmitPdu(
                             scAddr, destAddr, destPort.intValue(), data,
-                            (tracker.mDeliveryIntent != null));
+                            (tracker.mDeliveryIntent != null));*/
             }
         }
 
@@ -294,14 +282,14 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     @Override
     protected String getFormat() {
         // this function should be defined in Gsm/CdmaDispatcher.
-        Rlog.e(TAG, "getFormat should never be called from here!");
+     /*   Log.e(TAG, "getFormat should never be called from here!");*/
         return "unknown";
     }
 
     @Override
     protected GsmAlphabet.TextEncodingDetails calculateLength(
             CharSequence messageBody, boolean use7bitOnly) {
-        Rlog.e(TAG, "Error! Not implemented for IMS.");
+      /*  Log.e(TAG, "Error! Not implemented for IMS.");*/
         return null;
     }
 
@@ -309,7 +297,7 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     protected void sendNewSubmitPdu(String destinationAddress, String scAddress, String message,
             SmsHeader smsHeader, int format, PendingIntent sentIntent,
             PendingIntent deliveryIntent, boolean lastPart) {
-        Rlog.e(TAG, "Error! Not implemented for IMS.");
+        /*Log.e(TAG, "Error! Not implemented for IMS.");*/
     }
 
     @Override

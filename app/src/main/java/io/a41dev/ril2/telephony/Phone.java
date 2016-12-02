@@ -26,6 +26,8 @@ import android.telephony.SignalStrength;
 
 import java.util.List;
 
+import io.a41dev.ril2.telephony.sip.LinkCapabilities;
+import io.a41dev.ril2.telephony.sip.LinkProperties;
 import io.a41dev.ril2.telephony.test.SimulatedRadioControl;
 import io.a41dev.ril2.telephony.uicc.IsimRecords;
 import io.a41dev.ril2.telephony.uicc.UsimServiceTable;
@@ -940,10 +942,10 @@ public interface Phone {
      *
      * @param commandInterfaceCFReason is one of the valid call forwarding
      *        CF_REASONS, as defined in
-     *        <code>com.android.internal.telephony.CommandsInterface.</code>
+     *        <code>io.a41dev.ril2.telephony.CommandsInterface.</code>
      * @param commandInterfaceCFAction is one of the valid call forwarding
      *        CF_ACTIONS, as defined in
-     *        <code>com.android.internal.telephony.CommandsInterface.</code>
+     *        <code>io.a41dev.ril2.telephony.CommandsInterface.</code>
      * @param dialingNumber is the target phone number to forward calls to
      * @param timerSeconds is used by CFNRy to indicate the timeout before
      *        forwarding is attempted.
@@ -967,7 +969,7 @@ public interface Phone {
      *
      * @param commandInterfaceCLIRMode is one of the valid call CLIR
      *        modes, as defined in
-     *        <code>com.android.internal.telephony.CommandsInterface./code>
+     *        <code>io.a41dev.ril2.telephony.CommandsInterface./code>
      * @param onComplete a callback message when the action is completed.
      */
     void setOutgoingCallerIdDisplay(int commandInterfaceCLIRMode,
@@ -1130,7 +1132,7 @@ public interface Phone {
      * <strong>On failure</strong>,
      * (((AsyncResult)response.obj).result) == null and
      * (((AsyncResult)response.obj).exception) being an instance of
-     * com.android.internal.telephony.gsm.CommandException
+     * io.a41dev.ril2.telephony.gsm.CommandException
      *
      * @see #invokeOemRilRequestRaw(byte[], Message)
      */
@@ -1146,7 +1148,7 @@ public interface Phone {
      * <strong>On failure</strong>,
      * (((AsyncResult)response.obj).result) == null and
      * (((AsyncResult)response.obj).exception) being an instance of
-     * com.android.internal.telephony.gsm.CommandException
+     * io.a41dev.ril2.telephony.gsm.CommandException
      *
      * @see #invokeOemRilRequestStrings(String[], Message)
      */
@@ -1161,7 +1163,7 @@ public interface Phone {
      * <strong>On failure</strong>,
      * (((AsyncResult)response.obj).result) == null and
      * (((AsyncResult)response.obj).exception) being an instance of
-     * com.android.internal.telephony.gsm.CommandException
+     * io.a41dev.ril2.telephony.gsm.CommandException
      */
     void getDataCallList(Message response);
 

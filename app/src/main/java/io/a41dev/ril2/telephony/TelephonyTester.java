@@ -20,16 +20,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.PhoneBase;
+import android.util.Log;
 
 /**
  * Telephony tester receives the following intents where {name} is the phone name
  *
- * adb shell am broadcast -a com.android.internal.telephony.{name}.action_detached
- * adb shell am broadcast -a com.android.internal.telephony.{name}.action_attached
+ * adb shell am broadcast -a io.a41dev.ril2.telephony.{name}.action_detached
+ * adb shell am broadcast -a io.a41dev.ril2.telephony.{name}.action_attached
  */
 public class TelephonyTester {
     private static final String LOG_TAG = "TelephonyTester";
@@ -59,7 +56,7 @@ public class TelephonyTester {
     TelephonyTester(PhoneBase phone) {
         mPhone = phone;
 
-        if (Build.IS_DEBUGGABLE) {
+        if (false) {
             IntentFilter filter = new IntentFilter();
 
             filter.addAction(mPhone.getActionDetached());
@@ -73,12 +70,12 @@ public class TelephonyTester {
     }
 
     void dispose() {
-        if (Build.IS_DEBUGGABLE) {
+        if (false) {
             mPhone.getContext().unregisterReceiver(mIntentReceiver);
         }
     }
 
     private static void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 }

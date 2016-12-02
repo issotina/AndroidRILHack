@@ -16,7 +16,7 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.telephony.Rlog;
+import android.util.Log;
 import android.util.Log;
 
 /**
@@ -294,7 +294,7 @@ public abstract class Connection {
     public String toString() {
         StringBuilder str = new StringBuilder(128);
 
-        if (Rlog.isLoggable(LOG_TAG, Log.DEBUG)) {
+        if (Log.isLoggable(LOG_TAG, Log.DEBUG)) {
             str.append("addr: " + getAddress())
                     .append(" pres.: " + getNumberPresentation())
                     .append(" dial: " + getOrigDialString())

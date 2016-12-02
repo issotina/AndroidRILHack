@@ -16,13 +16,14 @@
 
 package io.a41dev.ril2.telephony.uicc;
 
-import java.util.ArrayList;
-
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.telephony.Rlog;
+import android.util.Log;
+
+import java.util.ArrayList;
+
+import io.a41dev.ril2.telephony.AsyncResult;
 
 public class AdnRecordLoader extends Handler {
     final static String LOG_TAG = "AdnRecordLoader";
@@ -187,7 +188,7 @@ public class AdnRecordLoader extends Handler {
                     }
 
                     if (VDBG) {
-                        Rlog.d(LOG_TAG,"ADN EF: 0x"
+                        Log.d(LOG_TAG,"ADN EF: 0x"
                             + Integer.toHexString(mEf)
                             + ":" + mRecordNumber
                             + "\n" + IccUtils.bytesToHexString(data));
@@ -218,7 +219,7 @@ public class AdnRecordLoader extends Handler {
                         throw new RuntimeException("load failed", ar.exception);
                     }
 
-                    Rlog.d(LOG_TAG,"ADN extension EF: 0x"
+                    Log.d(LOG_TAG,"ADN extension EF: 0x"
                         + Integer.toHexString(mExtensionEF)
                         + ":" + adn.mExtRecord
                         + "\n" + IccUtils.bytesToHexString(data));

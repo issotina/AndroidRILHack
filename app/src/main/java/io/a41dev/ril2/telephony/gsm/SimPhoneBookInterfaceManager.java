@@ -16,13 +16,13 @@
 
 package io.a41dev.ril2.telephony.gsm;
 
+import android.os.Message;
+import android.util.Log;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import android.os.Message;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.IccPhoneBookInterfaceManager;
-import com.android.internal.telephony.uicc.IccFileHandler;
+import io.a41dev.ril2.telephony.IccPhoneBookInterfaceManager;
+import io.a41dev.ril2.telephony.uicc.IccFileHandler;
 
 /**
  * SimPhoneBookInterfaceManager to provide an inter-process communication to
@@ -43,15 +43,15 @@ public class SimPhoneBookInterfaceManager extends IccPhoneBookInterfaceManager {
         super.dispose();
     }
 
-    @Override
+   /* @Override
     protected void finalize() {
         try {
             super.finalize();
         } catch (Throwable throwable) {
-            Rlog.e(LOG_TAG, "Error while finalizing:", throwable);
+            Log.e(LOG_TAG, "Error while finalizing:", throwable);
         }
-        if(DBG) Rlog.d(LOG_TAG, "SimPhoneBookInterfaceManager finalized");
-    }
+        if(DBG) Log.d(LOG_TAG, "SimPhoneBookInterfaceManager finalized");
+    }*/
 
     @Override
     public int[] getAdnRecordsSize(int efid) {
@@ -76,12 +76,12 @@ public class SimPhoneBookInterfaceManager extends IccPhoneBookInterfaceManager {
 
     @Override
     protected void logd(String msg) {
-        Rlog.d(LOG_TAG, "[SimPbInterfaceManager] " + msg);
+        Log.d(LOG_TAG, "[SimPbInterfaceManager] " + msg);
     }
 
     @Override
     protected void loge(String msg) {
-        Rlog.e(LOG_TAG, "[SimPbInterfaceManager] " + msg);
+        Log.e(LOG_TAG, "[SimPbInterfaceManager] " + msg);
     }
 }
 

@@ -16,29 +16,48 @@
 
 package io.a41dev.ril2.telephony.cdma;
 
-import com.android.internal.telephony.*;
 import android.content.Context;
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.PowerManager;
-import android.os.Registrant;
 import android.os.SystemClock;
-import android.telephony.Rlog;
-import android.text.TextUtils;
-
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
+import android.text.TextUtils;
+import android.util.Log;
 
-import com.android.internal.telephony.uicc.UiccCardApplication;
-import com.android.internal.telephony.uicc.UiccController;
-import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CallStateException;
+import io.a41dev.ril2.telephony.Connection;
+import io.a41dev.ril2.telephony.DriverCall;
+import io.a41dev.ril2.telephony.Phone;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.Registrant;
+import io.a41dev.ril2.telephony.UUSInfo;
+import io.a41dev.ril2.telephony.uicc.IccCardApplicationStatus.AppState;
+import io.a41dev.ril2.telephony.uicc.UiccCardApplication;
+import io.a41dev.ril2.telephony.uicc.UiccController;
+
+import static android.telephony.PhoneNumberUtils.FORMAT_JAPAN;
+import static android.telephony.PhoneNumberUtils.FORMAT_NANP;
+import static android.telephony.PhoneNumberUtils.FORMAT_UNKNOWN;
+import static android.telephony.PhoneNumberUtils.extractNetworkPortion;
+import static android.telephony.PhoneNumberUtils.extractPostDialPortion;
+import static android.telephony.PhoneNumberUtils.isDialable;
+import static android.telephony.PhoneNumberUtils.isReallyDialable;
+import static android.telephony.PhoneNumberUtils.isStartsPostDial;
+import static io.a41dev.ril2.TelephonyProperties.PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
+import static io.a41dev.ril2.TelephonyProperties.PROPERTY_IDP_STRING;
+import static io.a41dev.ril2.TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY;
+import static io.a41dev.ril2.telephony.RetryManager.DBG;
 
 /**
  * {@hide}
  */
 public class CdmaConnection extends Connection {
+    private static final String NANP_IDP_STRING = "011";
     static final String LOG_TAG = "CdmaConnection";
     private static final boolean VDBG = false;
 
@@ -71,7 +90,7 @@ public class CdmaConnection extends Connection {
     long mConnectTimeReal;
     long mDuration;
     long mHoldingStartTime;  // The time when the Connection last transitioned
-                            // into HOLDING
+    // into HOLDING
 
     int mNextPostDialChar;       // index into postDialString
 
@@ -91,13 +110,18 @@ public class CdmaConnection extends Connection {
     static final int EVENT_WAKE_LOCK_TIMEOUT = 4;
 
     //***** Constants
-    static final int WAKE_LOCK_TIMEOUT_MILLIS = 60*1000;
+    static final int WAKE_LOCK_TIMEOUT_MILLIS = 60 * 1000;
+    public static final char PAUSE = ',';
+    public static final char WAIT = ';';
+    public static final char WILD = 'N';
     static final int PAUSE_DELAY_MILLIS = 2 * 1000;
 
     //***** Inner Classes
 
     class MyHandler extends Handler {
-        MyHandler(Looper l) {super(l);}
+        MyHandler(Looper l) {
+            super(l);
+        }
 
         @Override
         public void
@@ -118,9 +142,11 @@ public class CdmaConnection extends Connection {
 
     //***** Constructors
 
-    /** This is probably an MT call that we first saw in a CLCC response */
+    /**
+     * This is probably an MT call that we first saw in a CLCC response
+     */
     /*package*/
-    CdmaConnection (Context context, DriverCall dc, CdmaCallTracker ct, int index) {
+    CdmaConnection(Context context, DriverCall dc, CdmaCallTracker ct, int index) {
         createWakeLock(context);
         acquireWakeLock();
 
@@ -137,11 +163,13 @@ public class CdmaConnection extends Connection {
 
         mIndex = index;
 
-        mParent = parentFromDCState (dc.state);
+        mParent = parentFromDCState(dc.state);
         mParent.attach(this, dc);
     }
 
-    /** This is an MO call/three way call, created when dialing */
+    /**
+     * This is an MO call/three way call, created when dialing
+     */
     /*package*/
     CdmaConnection(Context context, String dialString, CdmaCallTracker ct, CdmaCall parent) {
         createWakeLock(context);
@@ -151,12 +179,12 @@ public class CdmaConnection extends Connection {
         mHandler = new MyHandler(mOwner.getLooper());
 
         mDialString = dialString;
-        Rlog.d(LOG_TAG, "[CDMAConn] CdmaConnection: dialString=" + dialString);
+        Log.d(LOG_TAG, "[CDMAConn] CdmaConnection: dialString=" + dialString);
         dialString = formatDialString(dialString);
-        Rlog.d(LOG_TAG, "[CDMAConn] CdmaConnection:formated dialString=" + dialString);
+        Log.d(LOG_TAG, "[CDMAConn] CdmaConnection:formated dialString=" + dialString);
 
-        mAddress = PhoneNumberUtils.extractNetworkPortionAlt(dialString);
-        mPostDialString = PhoneNumberUtils.extractPostDialPortion(dialString);
+        mAddress = extractNetworkPortionAlt(dialString);
+        mPostDialString = extractPostDialPortion(dialString);
 
         mIndex = -1;
 
@@ -178,9 +206,47 @@ public class CdmaConnection extends Connection {
         }
     }
 
-    /** This is a Call waiting call*/
+    /**
+     * Extracts the network address portion and canonicalize.
+     *
+     * This function is equivalent to extractNetworkPortion(), except
+     * for allowing the PLUS character to occur at arbitrary positions
+     * in the address portion, not just the first position.
+     *
+     * @hide
+     */
+    public static String extractNetworkPortionAlt(String phoneNumber) {
+        if (phoneNumber == null) {
+            return null;
+        }
+
+        int len = phoneNumber.length();
+        StringBuilder ret = new StringBuilder(len);
+        boolean haveSeenPlus = false;
+
+        for (int i = 0; i < len; i++) {
+            char c = phoneNumber.charAt(i);
+            if (c == '+') {
+                if (haveSeenPlus) {
+                    continue;
+                }
+                haveSeenPlus = true;
+            }
+            if (isDialable(c)) {
+                ret.append(c);
+            } else if (isStartsPostDial (c)) {
+                break;
+            }
+        }
+
+        return ret.toString();
+    }
+
+    /**
+     * This is a Call waiting call
+     */
     CdmaConnection(Context context, CdmaCallWaitingNotification cw, CdmaCallTracker ct,
-            CdmaCall parent) {
+                   CdmaCall parent) {
         createWakeLock(context);
         acquireWakeLock();
 
@@ -202,8 +268,8 @@ public class CdmaConnection extends Connection {
     }
 
     static boolean
-    equalsHandlesNulls (Object a, Object b) {
-        return (a == null) ? (b == null) : a.equals (b);
+    equalsHandlesNulls(Object a, Object b) {
+        return (a == null) ? (b == null) : a.equals(b);
     }
 
     /*package*/ boolean
@@ -213,7 +279,7 @@ public class CdmaConnection extends Connection {
         //
         // We assume we know when MO calls are created (since we created them)
         // and therefore don't need to compare the phone number anyway.
-        if (! (mIsIncoming || c.isMT)) return true;
+        if (!(mIsIncoming || c.isMT)) return true;
 
         // ... but we can compare phone numbers on MT calls, and we have
         // no control over when they begin, so we might as well
@@ -224,7 +290,7 @@ public class CdmaConnection extends Connection {
 
 
     @Override
-    public String getOrigDialString(){
+    public String getOrigDialString() {
         return mDialString;
     }
 
@@ -298,7 +364,7 @@ public class CdmaConnection extends Connection {
         if (!mDisconnected) {
             mOwner.hangup(this);
         } else {
-            throw new CallStateException ("disconnected");
+            throw new CallStateException("disconnected");
         }
     }
 
@@ -307,7 +373,7 @@ public class CdmaConnection extends Connection {
         if (!mDisconnected) {
             mOwner.separate(this);
         } else {
-            throw new CallStateException ("disconnected");
+            throw new CallStateException("disconnected");
         }
     }
 
@@ -319,8 +385,8 @@ public class CdmaConnection extends Connection {
     @Override
     public void proceedAfterWaitChar() {
         if (mPostDialState != PostDialState.WAIT) {
-            Rlog.w(LOG_TAG, "CdmaConnection.proceedAfterWaitChar(): Expected "
-                + "getPostDialState() to be WAIT but was " + mPostDialState);
+            Log.w(LOG_TAG, "CdmaConnection.proceedAfterWaitChar(): Expected "
+                    + "getPostDialState() to be WAIT but was " + mPostDialState);
             return;
         }
 
@@ -332,8 +398,8 @@ public class CdmaConnection extends Connection {
     @Override
     public void proceedAfterWildChar(String str) {
         if (mPostDialState != PostDialState.WILD) {
-            Rlog.w(LOG_TAG, "CdmaConnection.proceedAfterWaitChar(): Expected "
-                + "getPostDialState() to be WILD but was " + mPostDialState);
+            Log.w(LOG_TAG, "CdmaConnection.proceedAfterWaitChar(): Expected "
+                    + "getPostDialState() to be WILD but was " + mPostDialState);
             return;
         }
 
@@ -425,7 +491,7 @@ public class CdmaConnection extends Connection {
                         CdmaSubscriptionSourceManager.SUBSCRIPTION_FROM_RUIM
                         && uiccAppState != AppState.APPSTATE_READY) {
                     return DisconnectCause.ICC_ERROR;
-                } else if (causeCode==CallFailCause.NORMAL_CLEARING) {
+                } else if (causeCode == CallFailCause.NORMAL_CLEARING) {
                     return DisconnectCause.NORMAL;
                 } else {
                     return DisconnectCause.ERROR_UNSPECIFIED;
@@ -438,7 +504,9 @@ public class CdmaConnection extends Connection {
         onDisconnect(disconnectCauseFromCode(causeCode));
     }
 
-    /** Called when the radio indicates the connection has been disconnected */
+    /**
+     * Called when the radio indicates the connection has been disconnected
+     */
     /*package*/ boolean
     onDisconnect(DisconnectCause cause) {
         boolean changed = false;
@@ -447,7 +515,7 @@ public class CdmaConnection extends Connection {
 
         if (!mDisconnected) {
             doDisconnect();
-            if (VDBG) Rlog.d(LOG_TAG, "onDisconnect: cause=" + cause);
+            if (VDBG) Log.d(LOG_TAG, "onDisconnect: cause=" + cause);
 
             mOwner.mPhone.notifyDisconnect(this);
 
@@ -459,12 +527,14 @@ public class CdmaConnection extends Connection {
         return changed;
     }
 
-    /** Called when the call waiting connection has been hung up */
+    /**
+     * Called when the call waiting connection has been hung up
+     */
     /*package*/ void
     onLocalDisconnect() {
         if (!mDisconnected) {
             doDisconnect();
-            if (VDBG) Rlog.d(LOG_TAG, "onLoalDisconnect" );
+            if (VDBG) Log.d(LOG_TAG, "onLoalDisconnect");
 
             if (mParent != null) {
                 mParent.detach(this);
@@ -475,7 +545,7 @@ public class CdmaConnection extends Connection {
 
     // Returns true if state has changed, false if nothing changed
     /*package*/ boolean
-    update (DriverCall dc) {
+    update(DriverCall dc) {
         CdmaCall newParent;
         boolean changed = false;
         boolean wasConnectingInOrOut = isConnectingInOrOut();
@@ -483,7 +553,7 @@ public class CdmaConnection extends Connection {
 
         newParent = parentFromDCState(dc.state);
 
-        if (Phone.DEBUG_PHONE) log("parent= " +mParent +", newParent= " + newParent);
+        if (Phone.DEBUG_PHONE) log("parent= " + mParent + ", newParent= " + newParent);
 
         if (!equalsHandlesNulls(mAddress, dc.number)) {
             if (Phone.DEBUG_PHONE) log("update: phone # changed!");
@@ -502,7 +572,7 @@ public class CdmaConnection extends Connection {
             mCnapName = dc.name;
         }
 
-        if (Phone.DEBUG_PHONE) log("--dssds----"+mCnapName);
+        if (Phone.DEBUG_PHONE) log("--dssds----" + mCnapName);
         mCnapNamePresentation = dc.namePresentation;
         mNumberPresentation = dc.numberPresentation;
 
@@ -515,7 +585,7 @@ public class CdmaConnection extends Connection {
             changed = true;
         } else {
             boolean parentStateChange;
-            parentStateChange = mParent.update (this, dc);
+            parentStateChange = mParent.update(this, dc);
             changed = changed || parentStateChange;
         }
 
@@ -523,9 +593,9 @@ public class CdmaConnection extends Connection {
 
         if (Phone.DEBUG_PHONE) log(
                 "Update, wasConnectingInOrOut=" + wasConnectingInOrOut +
-                ", wasHolding=" + wasHolding +
-                ", isConnectingInOrOut=" + isConnectingInOrOut() +
-                ", changed=" + changed);
+                        ", wasHolding=" + wasHolding +
+                        ", isConnectingInOrOut=" + isConnectingInOrOut() +
+                        ", changed=" + changed);
 
 
         if (wasConnectingInOrOut && !isConnectingInOrOut()) {
@@ -563,7 +633,7 @@ public class CdmaConnection extends Connection {
         if (mIndex >= 0) {
             return mIndex + 1;
         } else {
-            throw new CallStateException ("CDMA connection index not assigned");
+            throw new CallStateException("CDMA connection index not assigned");
         }
     }
 
@@ -594,16 +664,17 @@ public class CdmaConnection extends Connection {
 
     private void
     doDisconnect() {
-       mIndex = -1;
-       mDisconnectTime = System.currentTimeMillis();
-       mDuration = SystemClock.elapsedRealtime() - mConnectTimeReal;
-       mDisconnected = true;
+        mIndex = -1;
+        mDisconnectTime = System.currentTimeMillis();
+        mDuration = SystemClock.elapsedRealtime() - mConnectTimeReal;
+        mDisconnected = true;
     }
 
     /*package*/ void
     onStartedHolding() {
         mHoldingStartTime = SystemClock.elapsedRealtime();
     }
+
     /**
      * Performs the appropriate action for a post-dial char, but does not
      * notify application. returns false if the character is invalid and
@@ -620,7 +691,7 @@ public class CdmaConnection extends Connection {
             // pause again for 2 seconds before sending any
             // further DTMF digits.
             mHandler.sendMessageDelayed(mHandler.obtainMessage(EVENT_PAUSE_DONE),
-                                            PAUSE_DELAY_MILLIS);
+                    PAUSE_DELAY_MILLIS);
         } else if (c == PhoneNumberUtils.WAIT) {
             setPostDialState(PostDialState.WAIT);
         } else if (c == PhoneNumberUtils.WILD) {
@@ -655,7 +726,7 @@ public class CdmaConnection extends Connection {
         return subStr;
     }
 
-    public void updateParent(CdmaCall oldParent, CdmaCall newParent){
+    public void updateParent(CdmaCall oldParent, CdmaCall newParent) {
         if (newParent != oldParent) {
             if (oldParent != null) {
                 oldParent.detach(this);
@@ -666,8 +737,7 @@ public class CdmaConnection extends Connection {
     }
 
     @Override
-    protected void finalize()
-    {
+    protected void finalize() {
         /**
          * It is understood that This finializer is not guaranteed
          * to be called and the release lock call is here just in
@@ -675,7 +745,7 @@ public class CdmaConnection extends Connection {
          * and or onConnectedInOrOut.
          */
         if (mPartialWakeLock.isHeld()) {
-            Rlog.e(LOG_TAG, "[CdmaConn] UNEXPECTED; mPartialWakeLock is held when finalizing.");
+            Log.e(LOG_TAG, "[CdmaConn] UNEXPECTED; mPartialWakeLock is held when finalizing.");
         }
         releaseWakeLock();
     }
@@ -686,7 +756,7 @@ public class CdmaConnection extends Connection {
 
         if (mPostDialState == PostDialState.CANCELLED) {
             releaseWakeLock();
-            //Rlog.v("CDMA", "##### processNextPostDialChar: postDialState == CANCELLED, bail");
+            //Log.v("CDMA", "##### processNextPostDialChar: postDialState == CANCELLED, bail");
             return;
         }
 
@@ -712,7 +782,7 @@ public class CdmaConnection extends Connection {
                 // Will call processNextPostDialChar
                 mHandler.obtainMessage(EVENT_NEXT_POST_DIAL).sendToTarget();
                 // Don't notify application
-                Rlog.e("CDMA", "processNextPostDialChar: c=" + c + " isn't valid!");
+                Log.e("CDMA", "processNextPostDialChar: c=" + c + " isn't valid!");
                 return;
             }
         }
@@ -737,18 +807,19 @@ public class CdmaConnection extends Connection {
     }
 
 
-    /** "connecting" means "has never been ACTIVE" for both incoming
-     *  and outgoing calls
+    /**
+     * "connecting" means "has never been ACTIVE" for both incoming
+     * and outgoing calls
      */
     private boolean
     isConnectingInOrOut() {
         return mParent == null || mParent == mOwner.mRingingCall
-            || mParent.mState == CdmaCall.State.DIALING
-            || mParent.mState == CdmaCall.State.ALERTING;
+                || mParent.mState == CdmaCall.State.DIALING
+                || mParent.mState == CdmaCall.State.ALERTING;
     }
 
     private CdmaCall
-    parentFromDCState (DriverCall.State state) {
+    parentFromDCState(DriverCall.State state) {
         switch (state) {
             case ACTIVE:
             case DIALING:
@@ -774,6 +845,7 @@ public class CdmaConnection extends Connection {
      * Set post dial state and acquire wake lock while switching to "started" or "wait"
      * state, the wake lock will be released if state switches out of "started" or "wait"
      * state or after WAKE_LOCK_TIMEOUT_MILLIS.
+     *
      * @param s new PostDialState
      */
     private void setPostDialState(PostDialState s) {
@@ -796,7 +868,7 @@ public class CdmaConnection extends Connection {
     }
 
     private void createWakeLock(Context context) {
-        PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         mPartialWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, LOG_TAG);
     }
 
@@ -846,8 +918,8 @@ public class CdmaConnection extends Connection {
 
         // It means the PAUSE character(s) is in the middle of dial string
         // and it needs to be handled one by one.
-        if ((index < length) && (index > (currIndex + 1))  &&
-            ((wMatched == false) && isPause(phoneNumber.charAt(currIndex)))) {
+        if ((index < length) && (index > (currIndex + 1)) &&
+                ((wMatched == false) && isPause(phoneNumber.charAt(currIndex)))) {
             return (currIndex + 1);
         }
         return index;
@@ -879,14 +951,14 @@ public class CdmaConnection extends Connection {
     /**
      * format original dial string
      * 1) convert international dialing prefix "+" to
-     *    string specified per region
-     *
+     * string specified per region
+     * <p>
      * 2) handle corner cases for PAUSE/WAIT dialing:
-     *
-     *    If PAUSE/WAIT sequence at the end, ignore them.
-     *
-     *    If consecutive PAUSE/WAIT sequence in the middle of the string,
-     *    and if there is any WAIT in PAUSE/WAIT sequence, treat them like WAIT.
+     * <p>
+     * If PAUSE/WAIT sequence at the end, ignore them.
+     * <p>
+     * If consecutive PAUSE/WAIT sequence in the middle of the string,
+     * and if there is any WAIT in PAUSE/WAIT sequence, treat them like WAIT.
      */
     public static String formatDialString(String phoneNumber) {
         /**
@@ -928,11 +1000,242 @@ public class CdmaConnection extends Connection {
             }
             currIndex++;
         }
-        return PhoneNumberUtils.cdmaCheckAndProcessPlusCode(ret.toString());
+        return cdmaCheckAndProcessPlusCode(ret.toString());
     }
 
-    private void log(String msg) {
-        Rlog.d(LOG_TAG, "[CDMAConn] " + msg);
+    public static String cdmaCheckAndProcessPlusCode(String dialStr) {
+        if (!TextUtils.isEmpty(dialStr)) {
+            if (isReallyDialable(dialStr.charAt(0)) && isNonSeparator(dialStr.charAt(0))) {
+                String currIso = SystemProperties.get(PROPERTY_OPERATOR_ISO_COUNTRY, "");
+                String defaultIso = SystemProperties.get(PROPERTY_ICC_OPERATOR_ISO_COUNTRY, "");
+                if (!TextUtils.isEmpty(currIso) && !TextUtils.isEmpty(defaultIso)) {
+                    return cdmaCheckAndProcessPlusCodeByNumberFormat(dialStr,
+                            getFormatTypeFromCountryCode(currIso),
+                            getFormatTypeFromCountryCode(defaultIso));
+                }
+            }
+        }
+        return dialStr;
+    }
+
+    public final static boolean isNonSeparator(char c) {
+        return (c >= '0' && c <= '9') || c == '*' || c == '#' || c == '+'
+                || c == WILD || c == WAIT || c == PAUSE;
+    }
+
+    private static int getFormatTypeFromCountryCode(String country) {
+        // Check for the NANP countries
+        int length = NANP_COUNTRIES.length;
+        for (int i = 0; i < length; i++) {
+            if (NANP_COUNTRIES[i].compareToIgnoreCase(country) == 0) {
+                return FORMAT_NANP;
+            }
+        }
+        if ("jp".compareToIgnoreCase(country) == 0) {
+            return FORMAT_JAPAN;
+        }
+        return FORMAT_UNKNOWN;
+    }
+
+    private static final String[] NANP_COUNTRIES = new String[]{
+            "US", // United States
+            "CA", // Canada
+            "AS", // American Samoa
+            "AI", // Anguilla
+            "AG", // Antigua and Barbuda
+            "BS", // Bahamas
+            "BB", // Barbados
+            "BM", // Bermuda
+            "VG", // British Virgin Islands
+            "KY", // Cayman Islands
+            "DM", // Dominica
+            "DO", // Dominican Republic
+            "GD", // Grenada
+            "GU", // Guam
+            "JM", // Jamaica
+            "PR", // Puerto Rico
+            "MS", // Montserrat
+            "MP", // Northern Mariana Islands
+            "KN", // Saint Kitts and Nevis
+            "LC", // Saint Lucia
+            "VC", // Saint Vincent and the Grenadines
+            "TT", // Trinidad and Tobago
+            "TC", // Turks and Caicos Islands
+            "VI", // U.S. Virgin Islands
+    };
+
+    /**
+     * This function should be called from checkAndProcessPlusCode only
+     * And it is used for test purpose also.
+     * <p>
+     * It checks the dial string by looping through the network portion,
+     * post dial portion 1, post dial porting 2, etc. If there is any
+     * plus sign, then process the plus sign.
+     * Currently, this function supports the plus sign conversion within NANP only.
+     * Specifically, it handles the plus sign in the following ways:
+     * 1)+1NANP,remove +, e.g.
+     * +18475797000 is converted to 18475797000,
+     * 2)+NANP or +non-NANP Numbers,replace + with the current NANP IDP, e.g,
+     * +8475797000 is converted to 0118475797000,
+     * +11875767800 is converted to 01111875767800
+     * 3)+1NANP in post dial string(s), e.g.
+     * 8475797000;+18475231753 is converted to 8475797000;18475231753
+     *
+     * @param dialStr       the original dial string
+     * @param currFormat    the numbering system of the current country that the phone is camped on
+     * @param defaultFormat the numbering system of the country that the phone is activated on
+     * @return the converted dial string if the current/default countries belong to NANP,
+     * and if there is the "+" in the original dial string. Otherwise, the original dial
+     * string returns.
+     * @hide
+     */
+    public static String
+    cdmaCheckAndProcessPlusCodeByNumberFormat(String dialStr, int currFormat, int defaultFormat) {
+        String retStr = dialStr;
+        final String PLUS_SIGN_STRING = "+";
+        // Checks if the plus sign character is in the passed-in dial string
+        if (dialStr != null &&
+                dialStr.lastIndexOf(PLUS_SIGN_STRING) != -1) {
+            // Format the string based on the rules for the country the number is from,
+            // and the current country the phone is camped on.
+            if ((currFormat == defaultFormat) && (currFormat == FORMAT_NANP)) {
+                // Handle case where default and current telephone numbering plans are NANP.
+                String postDialStr = null;
+                String tempDialStr = dialStr;
+
+                // Sets the retStr to null since the conversion will be performed below.
+                retStr = null;
+                if (DBG) log("checkAndProcessPlusCode,dialStr=" + dialStr);
+                // This routine is to process the plus sign in the dial string by loop through
+                // the network portion, post dial portion 1, post dial portion 2... etc. if
+                // applied
+                do {
+                    String networkDialStr;
+                    networkDialStr = extractNetworkPortion(tempDialStr);
+                    // Handles the conversion within NANP
+                    networkDialStr = processPlusCodeWithinNanp(networkDialStr);
+
+                    // Concatenates the string that is converted from network portion
+                    if (!TextUtils.isEmpty(networkDialStr)) {
+                        if (retStr == null) {
+                            retStr = networkDialStr;
+                        } else {
+                            retStr = retStr.concat(networkDialStr);
+                        }
+                    } else {
+                        // This should never happen since we checked the if dialStr is null
+                        // and if it contains the plus sign in the beginning of this function.
+                        // The plus sign is part of the network portion.
+                        Log.e(" null newDialStr", networkDialStr);
+                        return dialStr;
+                    }
+                    postDialStr = extractPostDialPortion(tempDialStr);
+                    if (!TextUtils.isEmpty(postDialStr)) {
+                        int dialableIndex = findDialableIndexFromPostDialStr(postDialStr);
+
+                        // dialableIndex should always be greater than 0
+                        if (dialableIndex >= 1) {
+                            retStr = appendPwCharBackToOrigDialStr(dialableIndex, retStr, postDialStr);
+                            // Skips the P/W character, extracts the dialable portion
+                            tempDialStr = postDialStr.substring(dialableIndex);
+                        } else {
+                            // Non-dialable character such as P/W should not be at the end of
+                            // the dial string after P/W processing in CdmaConnection.java
+                            // Set the postDialStr to "" to break out of the loop
+                            if (dialableIndex < 0) {
+                                postDialStr = "";
+                            }
+                            Log.e("wrong postDialStr=", postDialStr);
+                        }
+                    }
+                    if (DBG) log("checkAndProcessPlusCode,postDialStr=" + postDialStr);
+                } while (!TextUtils.isEmpty(postDialStr) && !TextUtils.isEmpty(tempDialStr));
+            } else {
+                // TODO: Support NANP international conversion and other telephone numbering plans.
+                // Currently the phone is never used in non-NANP system, so return the original
+                // dial string.
+            }
+        }
+        return retStr;
+    }
+
+
+    private static String
+    appendPwCharBackToOrigDialStr(int dialableIndex, String origStr, String dialStr) {
+        String retStr;
+
+        // There is only 1 P/W character before the dialable characters
+        if (dialableIndex == 1) {
+            StringBuilder ret = new StringBuilder(origStr);
+            ret = ret.append(dialStr.charAt(0));
+            retStr = ret.toString();
+        } else {
+            // It means more than 1 P/W characters in the post dial string,
+            // appends to retStr
+            String nonDigitStr = dialStr.substring(0, dialableIndex);
+            retStr = origStr.concat(nonDigitStr);
+        }
+        return retStr;
+    }
+
+
+    private static int findDialableIndexFromPostDialStr(String postDialStr) {
+        for (int index = 0; index < postDialStr.length(); index++) {
+            char c = postDialStr.charAt(index);
+            if (isReallyDialable(c)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isOneNanp(String dialStr) {
+        boolean retVal = false;
+        if (dialStr != null) {
+            String newDialStr = dialStr.substring(1);
+            if ((dialStr.charAt(0) == '1')) {
+                retVal = true;
+            }
+        } else {
+        }
+        return retVal;
+    }
+
+    private static String processPlusCodeWithinNanp(String networkDialStr) {
+        String retStr = networkDialStr;
+        final char PLUS_SIGN_CHAR = '+';
+
+        if (DBG) log("processPlusCodeWithinNanp,networkDialStr=" + networkDialStr);
+        // If there is a plus sign at the beginning of the dial string,
+        // Convert the plus sign to the default IDP since it's an international number
+        if (networkDialStr != null &&
+                networkDialStr.charAt(0) == PLUS_SIGN_CHAR &&
+                networkDialStr.length() > 1) {
+            String newStr = networkDialStr.substring(1);
+            if (isOneNanp(newStr)) {
+                // Remove the leading plus sign
+                retStr = newStr;
+            } else {
+                String idpStr = getDefaultIdp();
+                // Replaces the plus sign with the default IDP
+                retStr = networkDialStr.replaceFirst("[+]", idpStr);
+            }
+        }
+        if (DBG) log("processPlusCodeWithinNanp,retStr=" + retStr);
+        return retStr;
+    }
+
+    private static String getDefaultIdp() {
+        String ps = null;
+        SystemProperties.get(PROPERTY_IDP_STRING, ps);
+        if (TextUtils.isEmpty(ps)) {
+            ps = NANP_IDP_STRING;
+        }
+        return ps;
+    }
+
+    private static void log(String msg) {
+        Log.d(LOG_TAG, "[CDMAConn] " + msg);
     }
 
     @Override

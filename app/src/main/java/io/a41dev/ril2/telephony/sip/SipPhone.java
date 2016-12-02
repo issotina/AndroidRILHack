@@ -25,23 +25,24 @@ import android.net.sip.SipException;
 import android.net.sip.SipManager;
 import android.net.sip.SipProfile;
 import android.net.sip.SipSession;
-import android.os.AsyncResult;
 import android.os.Message;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
 import android.text.TextUtils;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.CallStateException;
-import com.android.internal.telephony.Connection;
-import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.PhoneNotifier;
+import android.util.Log;
 
 import java.text.ParseException;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.Call;
+import io.a41dev.ril2.telephony.CallStateException;
+import io.a41dev.ril2.telephony.CellInfo;
+import io.a41dev.ril2.telephony.Connection;
+import io.a41dev.ril2.telephony.Phone;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.PhoneNotifier;
 
 /**
  * {@hide}
@@ -377,6 +378,31 @@ public class SipPhone extends SipPhoneBase {
         return super.getServiceState();
     }
 
+    @Override
+    public List<CellInfo> getAllCellInfo() {
+        return null;
+    }
+
+    @Override
+    public LinkProperties getLinkProperties(String apnType) {
+        return null;
+    }
+
+    @Override
+    public LinkCapabilities getLinkCapabilities(String apnType) {
+        return null;
+    }
+
+    /*@Override
+    public LinkProperties getLinkProperties(String apnType) {
+        return null;
+    }*/
+
+  /*  @Override
+    public LinkCapabilities getLinkCapabilities(String apnType) {
+        return null;
+    }*/
+
     private String getUriString(SipProfile p) {
         // SipProfile.getUriString() may contain "SIP:" and port
         return p.getUserName() + "@" + getSipDomain(p);
@@ -410,19 +436,19 @@ public class SipPhone extends SipPhoneBase {
     }
 
     private void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 
     private static void slog(String s) {
-        Rlog.d(LOG_TAG, s);
+        Log.d(LOG_TAG, s);
     }
 
     private void loge(String s) {
-        Rlog.e(LOG_TAG, s);
+        Log.e(LOG_TAG, s);
     }
 
     private void loge(String s, Exception e) {
-        Rlog.e(LOG_TAG, s, e);
+        Log.e(LOG_TAG, s, e);
     }
 
     private class SipCall extends SipCallBase {
@@ -712,7 +738,7 @@ public class SipPhone extends SipPhoneBase {
         }
 
         private void log(String s) {
-            Rlog.d(SC_TAG, s);
+            Log.d(SC_TAG, s);
         }
     }
 
@@ -729,8 +755,8 @@ public class SipPhone extends SipPhoneBase {
 
         private SipAudioCallAdapter mAdapter = new SipAudioCallAdapter() {
             @Override
-            protected void onCallEnded(DisconnectCause cause) {
-                if (getDisconnectCause() != DisconnectCause.LOCAL) {
+            protected void onCallEnded(Connection.DisconnectCause cause) {
+                if (getDisconnectCause() != Connection.DisconnectCause.LOCAL) {
                     setDisconnectCause(cause);
                 }
                 synchronized (SipPhone.class) {
@@ -781,7 +807,7 @@ public class SipPhone extends SipPhoneBase {
                                     switchHoldingAndActive();
                                 } catch (CallStateException e) {
                                     // disconnect the call.
-                                    onCallEnded(DisconnectCause.LOCAL);
+                                    onCallEnded(Connection.DisconnectCause.LOCAL);
                                     return;
                                 }
                             }
@@ -797,7 +823,7 @@ public class SipPhone extends SipPhoneBase {
             }
 
             @Override
-            protected void onError(DisconnectCause cause) {
+            protected void onError(Connection.DisconnectCause cause) {
                 if (SCN_DBG) log("onError: " + cause);
                 onCallEnded(cause);
             }
@@ -848,7 +874,7 @@ public class SipPhone extends SipPhoneBase {
 
         AudioGroup getAudioGroup() {
             if (mSipAudioCall == null) return null;
-            return mSipAudioCall.getAudioGroup();
+            return null;
         }
 
         void dial() throws SipException {
@@ -868,7 +894,7 @@ public class SipPhone extends SipPhoneBase {
         }
 
         void unhold(AudioGroup audioGroup) throws CallStateException {
-            mSipAudioCall.setAudioGroup(audioGroup);
+          //  mSipAudioCall.setAudioGroup(audioGroup);
             setState(Call.State.ACTIVE);
             try {
                 mSipAudioCall.continueCall(TIMEOUT_HOLD_CALL);
@@ -967,7 +993,7 @@ public class SipPhone extends SipPhoneBase {
                 Phone originalPhone = getPhone();
                 AudioGroup audioGroup = call.getAudioGroup(); // may be null
                 call.add(this);
-                mSipAudioCall.setAudioGroup(audioGroup);
+              //  mSipAudioCall.setAudioGroup(audioGroup);
 
                 // put the original call to bg; and the separated call becomes
                 // fg if it was in bg
@@ -981,7 +1007,7 @@ public class SipPhone extends SipPhoneBase {
         }
 
         private void log(String s) {
-            Rlog.d(SCN_TAG, s);
+            Log.d(SCN_TAG, s);
         }
     }
 
@@ -1046,7 +1072,7 @@ public class SipPhone extends SipPhoneBase {
         }
 
         private void log(String s) {
-            Rlog.d(SACA_TAG, s);
+            Log.d(SACA_TAG, s);
         }
     }
 }

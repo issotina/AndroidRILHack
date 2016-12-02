@@ -16,29 +16,23 @@
 
 package io.a41dev.ril2.telephony.cdma;
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.AppOpsManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.PhoneNumberUtils;
-import android.telephony.cdma.CdmaSmsCbProgramData;
-import android.telephony.cdma.CdmaSmsCbProgramResults;
-
-import com.android.internal.telephony.CommandsInterface;
-import com.android.internal.telephony.WakeLockStateMachine;
-import com.android.internal.telephony.cdma.sms.BearerData;
-import com.android.internal.telephony.cdma.sms.CdmaSmsAddress;
-import com.android.internal.telephony.cdma.sms.SmsEnvelope;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.WakeLockStateMachine;
+import io.a41dev.ril2.telephony.cdma.sms.BearerData;
+import io.a41dev.ril2.telephony.cdma.sms.CdmaSmsAddress;
+import io.a41dev.ril2.telephony.cdma.sms.SmsEnvelope;
 
 /**
  * Handle CDMA Service Category Program Data requests and responses.
@@ -94,19 +88,19 @@ public final class CdmaServiceCategoryProgramHandler extends WakeLockStateMachin
      * @return true if an ordered broadcast was sent; false on failure
      */
     private boolean handleServiceCategoryProgramData(SmsMessage sms) {
-        ArrayList<CdmaSmsCbProgramData> programDataList = sms.getSmsCbProgramData();
+        /*ArrayList<CdmaSmsCbProgramData> programDataList = sms.getSmsCbProgramData();
         if (programDataList == null) {
             loge("handleServiceCategoryProgramData: program data list is null!");
             return false;
         }
 
-        Intent intent = new Intent(Intents.SMS_SERVICE_CATEGORY_PROGRAM_DATA_RECEIVED_ACTION);
+        Intent intent = new Intent(Telephony.Sms.Intents.SMS_SERVICE_CATEGORY_PROGRAM_DATA_RECEIVED_ACTION);
         intent.putExtra("sender", sms.getOriginatingAddress());
-        intent.putParcelableArrayListExtra("program_data", programDataList);
+        *//*intent.putParcelableArrayListExtra("program_data", programDataList);*//*
 
-        mContext.sendOrderedBroadcast(intent, Manifest.permission.RECEIVE_SMS,
+       *//* mContext.sendOrderedBroadcast(intent, Manifest.permission.RECEIVE_SMS,
                 AppOpsManager.OP_RECEIVE_SMS, mScpResultsReceiver,
-                getHandler(), Activity.RESULT_OK, null, null);
+                getHandler(), Activity.RESULT_OK, null, null);*/
         return true;
     }
 
@@ -124,7 +118,7 @@ public final class CdmaServiceCategoryProgramHandler extends WakeLockStateMachin
 
         private void sendScpResults() {
             int resultCode = getResultCode();
-            if ((resultCode != Activity.RESULT_OK) && (resultCode != Intents.RESULT_SMS_HANDLED)) {
+            if ((resultCode != Activity.RESULT_OK) && (resultCode != Telephony.Sms.Intents.RESULT_SMS_HANDLED)) {
                 loge("SCP results error: result code = " + resultCode);
                 return;
             }
@@ -138,17 +132,17 @@ public final class CdmaServiceCategoryProgramHandler extends WakeLockStateMachin
                 loge("SCP results error: missing sender extra.");
                 return;
             }
-            ArrayList<CdmaSmsCbProgramResults> results
+         /*   ArrayList<CdmaSmsCbProgramResults> results
                     = extras.getParcelableArrayList("results");
             if (results == null) {
                 loge("SCP results error: missing results extra.");
                 return;
-            }
+            }*/
 
             BearerData bData = new BearerData();
             bData.messageType = BearerData.MESSAGE_TYPE_SUBMIT;
             bData.messageId = SmsMessage.getNextMessageId();
-            bData.serviceCategoryProgramResults = results;
+           /* bData.serviceCategoryProgramResults = results;*/
             byte[] encodedBearerData = BearerData.encode(bData);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream(100);
@@ -158,7 +152,7 @@ public final class CdmaServiceCategoryProgramHandler extends WakeLockStateMachin
                 dos.writeInt(0); //servicePresent
                 dos.writeInt(0); //serviceCategory
                 CdmaSmsAddress destAddr = CdmaSmsAddress.parse(
-                        PhoneNumberUtils.cdmaCheckAndProcessPlusCodeForSms(sender));
+                        CdmaConnection.cdmaCheckAndProcessPlusCode(sender));
                 dos.write(destAddr.digitMode);
                 dos.write(destAddr.numberMode);
                 dos.write(destAddr.ton); // number_type

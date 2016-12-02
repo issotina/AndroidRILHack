@@ -16,17 +16,17 @@
 
 package io.a41dev.ril2.telephony.cat;
 
-import com.android.internal.telephony.EncodeException;
-import com.android.internal.telephony.GsmAlphabet;
-import java.util.Calendar;
-import java.util.TimeZone;
-import android.os.SystemProperties;
 import android.text.TextUtils;
-
-import com.android.internal.telephony.cat.AppInterface.CommandType;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Calendar;
+import java.util.TimeZone;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.telephony.EncodeException;
+import io.a41dev.ril2.telephony.GsmAlphabet;
+import io.a41dev.ril2.telephony.cat.AppInterface.CommandType;
 
 abstract class ResponseData {
     /**

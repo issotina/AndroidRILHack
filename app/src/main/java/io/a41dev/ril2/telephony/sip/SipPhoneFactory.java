@@ -16,13 +16,14 @@
 
 package io.a41dev.ril2.telephony.sip;
 
-import com.android.internal.telephony.PhoneNotifier;
 
 import android.content.Context;
 import android.net.sip.SipProfile;
-import android.telephony.Rlog;
+import android.util.Log;
 
 import java.text.ParseException;
+
+import io.a41dev.ril2.telephony.PhoneNotifier;
 
 /**
  * {@hide}
@@ -42,7 +43,7 @@ public class SipPhoneFactory {
             SipProfile profile = new SipProfile.Builder(sipUri).build();
             return new SipPhone(context, phoneNotifier, profile);
         } catch (ParseException e) {
-            Rlog.w("SipPhoneFactory", "makePhone", e);
+            Log.w("SipPhoneFactory", "makePhone", e);
             return null;
         }
     }

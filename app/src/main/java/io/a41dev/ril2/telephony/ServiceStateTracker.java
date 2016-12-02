@@ -17,29 +17,19 @@
 package io.a41dev.ril2.telephony;
 
 import android.content.Context;
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Registrant;
-import android.os.RegistrantList;
 import android.os.SystemClock;
-import android.telephony.CellInfo;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.text.TextUtils;
-import android.util.Pair;
-import android.util.TimeUtils;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 
-import com.android.internal.telephony.dataconnection.DcTrackerBase;
-import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
-import com.android.internal.telephony.uicc.IccRecords;
-import com.android.internal.telephony.uicc.UiccCardApplication;
-import com.android.internal.telephony.uicc.UiccController;
+import io.a41dev.ril2.telephony.uicc.UiccCardApplication;
+import io.a41dev.ril2.telephony.uicc.UiccController;
 
 /**
  * {@hide}
@@ -53,7 +43,7 @@ public abstract class ServiceStateTracker extends Handler {
     protected CommandsInterface mCi;
     protected UiccController mUiccController = null;
     protected UiccCardApplication mUiccApplcation = null;
-    protected IccRecords mIccRecords = null;
+    protected io.a41dev.ril2.telephony.uicc.IccRecords mIccRecords = null;
 
     protected PhoneBase mPhoneBase;
 
@@ -70,8 +60,8 @@ public abstract class ServiceStateTracker extends Handler {
     // so we don't want the reference to change.
     protected final CellInfo mCellInfo;
 
-    protected SignalStrength mSignalStrength = new SignalStrength();
-
+  /*  protected SignalStrength mSignalStrength = new SignalStrength();
+*/
     // TODO - this should not be public, right now used externally GsmConnetion.
     public RestrictedState mRestrictedState = new RestrictedState();
 
@@ -204,16 +194,16 @@ public abstract class ServiceStateTracker extends Handler {
         mPhoneBase = phoneBase;
         mCellInfo = cellInfo;
         mCi = ci;
-        mVoiceCapable = mPhoneBase.getContext().getResources().getBoolean(
-                com.android.internal.R.bool.config_voice_capable);
+        mVoiceCapable =/* mPhoneBase.getContext().getResources().getBoolean(
+                com.android.internal.R.bool.config_voice_capable)*/false;
         mUiccController = UiccController.getInstance();
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         mCi.setOnSignalStrengthUpdate(this, EVENT_SIGNAL_STRENGTH_UPDATE, null);
         mCi.registerForCellInfoList(this, EVENT_UNSOL_CELL_INFO_LIST, null);
 
-        mPhoneBase.setSystemProperty(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
+      /*  mPhoneBase.setSystemProperty(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
             ServiceState.rilRadioTechnologyToString(ServiceState.RIL_RADIO_TECHNOLOGY_UNKNOWN));
-    }
+    */}
 
     public void dispose() {
         mCi.unSetOnSignalStrengthUpdate(this);
@@ -229,7 +219,7 @@ public abstract class ServiceStateTracker extends Handler {
     protected boolean notifySignalStrength() {
         boolean notified = false;
         synchronized(mCellInfo) {
-            if (!mSignalStrength.equals(mLastSignalStrength)) {
+           /* if (!mSignalStrength.equals(mLastSignalStrength)) {
                 try {
                     mPhoneBase.notifySignalStrength();
                     notified = true;
@@ -237,7 +227,7 @@ public abstract class ServiceStateTracker extends Handler {
                     loge("updateSignalStrength() Phone already destroyed: " + ex
                             + "SignalStrength not notified");
                 }
-            }
+            }*/
         }
         return notified;
     }
@@ -248,31 +238,31 @@ public abstract class ServiceStateTracker extends Handler {
      * new RAT as an Integer Object.
      */
     protected void notifyDataRegStateRilRadioTechnologyChanged() {
-        int rat = mSS.getRilDataRadioTechnology();
+       /* int rat = mSS.getRilDataRadioTechnology();
         int drs = mSS.getDataRegState();
         if (DBG) log("notifyDataRegStateRilRadioTechnologyChanged: drs=" + drs + " rat=" + rat);
         mPhoneBase.setSystemProperty(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
                 ServiceState.rilRadioTechnologyToString(rat));
         mDataRegStateOrRatChangedRegistrants.notifyResult(new Pair<Integer, Integer>(drs, rat));
-    }
+    */}
 
     /**
      * Some operators have been known to report registration failure
      * data only devices, to fix that use DataRegState.
      */
     protected void useDataRegStateForDataOnlyDevices() {
-        if (mVoiceCapable == false) {
+        /*if (mVoiceCapable == false) {
             if (DBG) {
                 log("useDataRegStateForDataOnlyDevice: VoiceRegState=" + mNewSS.getVoiceRegState()
                     + " DataRegState=" + mNewSS.getDataRegState());
             }
             // TODO: Consider not lying and instead have callers know the difference. 
             mNewSS.setVoiceRegState(mNewSS.getDataRegState());
-        }
+        }*/
     }
 
     protected void updatePhoneObject() {
-        mPhoneBase.updatePhoneObject(mSS.getRilVoiceRadioTechnology());
+       /* mPhoneBase.updatePhoneObject(mSS.getRilVoiceRadioTechnology());*/
     }
 
     /**
@@ -407,12 +397,12 @@ public abstract class ServiceStateTracker extends Handler {
                         log("EVENT_GET_CELL_INFO_LIST: error ret null, e=" + ar.exception);
                         result.list = null;
                     } else {
-                        result.list = (List<CellInfo>) ar.result;
+                        /*//result.list = (List<CellInfo>) ar.result;
 
                         if (VDBG) {
                             log("EVENT_GET_CELL_INFO_LIST: size=" + result.list.size()
                                     + " list=" + result.list);
-                        }
+                        }*/
                     }
                     mLastCellInfoListTime = SystemClock.elapsedRealtime();
                     mLastCellInfoList = result.list;
@@ -426,14 +416,14 @@ public abstract class ServiceStateTracker extends Handler {
                 if (ar.exception != null) {
                     log("EVENT_UNSOL_CELL_INFO_LIST: error ignoring, e=" + ar.exception);
                 } else {
-                    List<CellInfo> list = (List<CellInfo>) ar.result;
+                 /*   List<CellInfo> list = (List<CellInfo>) ar.result;
                     if (DBG) {
                         log("EVENT_UNSOL_CELL_INFO_LIST: size=" + list.size()
                                 + " list=" + list);
                     }
                     mLastCellInfoListTime = SystemClock.elapsedRealtime();
                     mLastCellInfoList = list;
-                    mPhoneBase.notifyCellInfo(list);
+                    mPhoneBase.notifyCellInfo(list);*/
                 }
                 break;
             }
@@ -519,9 +509,9 @@ public abstract class ServiceStateTracker extends Handler {
         Registrant r = new Registrant(h, what, obj);
 
         mNetworkAttachedRegistrants.add(r);
-        if (mSS.getVoiceRegState() == ServiceState.STATE_IN_SERVICE) {
+       /* if (mSS.getVoiceRegState() == ServiceState.STATE_IN_SERVICE) {
             r.notifyRegistrant();
-        }
+        }*/
     }
     public void unregisterForNetworkAttached(Handler h) {
         mNetworkAttachedRegistrants.remove(h);
@@ -570,7 +560,7 @@ public abstract class ServiceStateTracker extends Handler {
      *
      * Hang up the existing voice calls to decrease call drop rate.
      */
-    public void powerOffRadioSafely(DcTrackerBase dcTracker) {
+    /*public void powerOffRadioSafely(DcTrackerBase dcTracker) {
         synchronized (this) {
             if (!mPendingRadioPowerOffAfterDataOff) {
                 // To minimize race conditions we call cleanUpAllConnections on
@@ -595,7 +585,7 @@ public abstract class ServiceStateTracker extends Handler {
                 }
             }
         }
-    }
+    }*/
 
     /**
      * process the pending request to turn radio off after data is disconnected
@@ -622,12 +612,12 @@ public abstract class ServiceStateTracker extends Handler {
      * @return true if the signal strength changed and a notification was sent.
      */
     protected boolean onSignalStrengthResult(AsyncResult ar, boolean isGsm) {
-        SignalStrength oldSignalStrength = mSignalStrength;
+        /*SignalStrength oldSignalStrength = mSignalStrength;*/
 
         // This signal is used for both voice and data radio signal so parse
         // all fields
 
-        if ((ar.exception == null) && (ar.result != null)) {
+      /*  if ((ar.exception == null) && (ar.result != null)) {
             mSignalStrength = (SignalStrength) ar.result;
             mSignalStrength.validateInput();
             mSignalStrength.setGsm(isGsm);
@@ -635,7 +625,7 @@ public abstract class ServiceStateTracker extends Handler {
             log("onSignalStrengthResult() Exception from RIL : " + ar.exception);
             mSignalStrength = new SignalStrength(isGsm);
         }
-
+*/
         return notifySignalStrength();
     }
 
@@ -690,19 +680,19 @@ public abstract class ServiceStateTracker extends Handler {
         // Determine if the Icc card exists
         boolean iccCardExist = false;
         if (mUiccApplcation != null) {
-            iccCardExist = mUiccApplcation.getState() != AppState.APPSTATE_UNKNOWN;
+           /* iccCardExist = mUiccApplcation.getState() != AppState.APPSTATE_UNKNOWN;*/
         }
 
         // Determine retVal
         boolean retVal = ((iccCardExist && (mcc != prevMcc)) || needToFixTimeZone);
         if (DBG) {
             long ctm = System.currentTimeMillis();
-            log("shouldFixTimeZoneNow: retVal=" + retVal +
+            /*log("shouldFixTimeZoneNow: retVal=" + retVal +
                     " iccCardExist=" + iccCardExist +
                     " operatorNumeric=" + operatorNumeric + " mcc=" + mcc +
                     " prevOperatorNumeric=" + prevOperatorNumeric + " prevMcc=" + prevMcc +
                     " needToFixTimeZone=" + needToFixTimeZone +
-                    " ltod=" + TimeUtils.logTimeOfDay(ctm));
+                    " ltod=" + TimeUtils.logTimeOfDay(ctm));*/
         }
         return retVal;
     }
@@ -756,7 +746,7 @@ public abstract class ServiceStateTracker extends Handler {
      */
     public SignalStrength getSignalStrength() {
         synchronized(mCellInfo) {
-            return mSignalStrength;
+            return null;
         }
     }
 

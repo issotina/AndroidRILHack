@@ -26,13 +26,13 @@ import android.os.Parcelable;
  */
 public class CatCmdMessage implements Parcelable {
     // members
-    CommandDetails mCmdDet;
+    public CommandDetails mCmdDet;
     private TextMessage mTextMsg;
     private Menu mMenu;
     private Input mInput;
     private BrowserSettings mBrowserSettings = null;
     private ToneSettings mToneSettings = null;
-    private CallSettings mCallSettings = null;
+     CallSettings mCallSettings = null;
 
     /*
      * Container for Launch Browser command settings.
@@ -50,7 +50,7 @@ public class CatCmdMessage implements Parcelable {
         public TextMessage callMsg;
     }
 
-    CatCmdMessage(CommandParams cmdParams) {
+    public CatCmdMessage(CommandParams cmdParams) {
         mCmdDet = cmdParams.mCmdDet;
         switch(getCmdType()) {
         case SET_UP_MENU:

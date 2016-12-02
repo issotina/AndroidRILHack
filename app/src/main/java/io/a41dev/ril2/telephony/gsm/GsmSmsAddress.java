@@ -17,9 +17,12 @@
 package io.a41dev.ril2.telephony.gsm;
 
 import android.telephony.PhoneNumberUtils;
+
 import java.text.ParseException;
-import com.android.internal.telephony.GsmAlphabet;
-import com.android.internal.telephony.SmsAddress;
+
+import io.a41dev.ril2.telephony.GsmAlphabet;
+import io.a41dev.ril2.telephony.SmsAddress;
+
 
 public class GsmSmsAddress extends SmsAddress {
 

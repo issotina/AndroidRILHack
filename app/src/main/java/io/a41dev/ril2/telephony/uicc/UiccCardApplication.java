@@ -580,7 +580,7 @@ public class UiccCardApplication {
      * If the supplied PIN is incorrect:
      * ((AsyncResult)onComplete.obj).exception != null
      * && ((AsyncResult)onComplete.obj).exception
-     *       instanceof com.android.internal.telephony.gsm.CommandException)
+     *       instanceof io.a41dev.ril2.telephony.gsm.CommandException)
      * && ((CommandException)(((AsyncResult)onComplete.obj).exception))
      *          .getCommandError() == CommandException.Error.PASSWORD_INCORRECT
      */
@@ -607,7 +607,7 @@ public class UiccCardApplication {
      * If the supplied PIN is incorrect:
      * ((AsyncResult)onComplete.obj).exception != null
      * && ((AsyncResult)onComplete.obj).exception
-     *       instanceof com.android.internal.telephony.gsm.CommandException)
+     *       instanceof io.a41dev.ril2.telephony.gsm.CommandException)
      * && ((CommandException)(((AsyncResult)onComplete.obj).exception))
      *          .getCommandError() == CommandException.Error.PASSWORD_INCORRECT
      *

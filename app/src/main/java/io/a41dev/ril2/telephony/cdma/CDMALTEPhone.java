@@ -21,30 +21,25 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.SQLException;
 import android.net.Uri;
-import android.os.AsyncResult;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.Telephony;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.CommandsInterface;
-
-import com.android.internal.telephony.OperatorInfo;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.PhoneNotifier;
-import com.android.internal.telephony.PhoneProxy;
-import com.android.internal.telephony.SMSDispatcher;
-import com.android.internal.telephony.SmsBroadcastUndelivered;
-import com.android.internal.telephony.gsm.GsmSMSDispatcher;
-import com.android.internal.telephony.gsm.SmsMessage;
-import com.android.internal.telephony.uicc.IsimRecords;
-import com.android.internal.telephony.uicc.IsimUiccRecords;
-import com.android.internal.telephony.uicc.SIMRecords;
-import com.android.internal.telephony.uicc.UiccCardApplication;
-import com.android.internal.telephony.uicc.UiccController;
+import android.util.Log;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.OperatorInfo;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.PhoneNotifier;
+import io.a41dev.ril2.telephony.PhoneProxy;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.uicc.IsimRecords;
+import io.a41dev.ril2.telephony.uicc.IsimUiccRecords;
+import io.a41dev.ril2.telephony.uicc.SIMRecords;
+import io.a41dev.ril2.telephony.uicc.UiccCardApplication;
+import io.a41dev.ril2.telephony.uicc.UiccController;
 
 public class CDMALTEPhone extends CDMAPhone {
     static final String LOG_LTE_TAG = "CDMALTEPhone";
@@ -88,7 +83,7 @@ public class CDMALTEPhone extends CDMAPhone {
 
     @Override
     protected void initSstIcc() {
-        mSST = new CdmaLteServiceStateTracker(this);
+       // mSST = new CdmaLteServiceStateTracker(this);
     }
 
     @Override
@@ -107,7 +102,8 @@ public class CDMALTEPhone extends CDMAPhone {
     public PhoneConstants.DataState getDataConnectionState(String apnType) {
         PhoneConstants.DataState ret = PhoneConstants.DataState.DISCONNECTED;
 
-        if (mSST == null) {
+        if (false//mSST == null)
+                ) {
             // Radio Technology Change is ongoing, dispose() and
             // removeReferences() have already been called
 
@@ -124,8 +120,8 @@ public class CDMALTEPhone extends CDMAPhone {
 
                 case CONNECTED:
                 case DISCONNECTING:
-                    if (mCT.mState != PhoneConstants.State.IDLE &&
-                            !mSST.isConcurrentVoiceAndDataAllowed()) {
+                    if (mCT.mState != PhoneConstants.State.IDLE /*&&
+                            !mSST.isConcurrentVoiceAndDataAllowed()*/) {
                         ret = PhoneConstants.DataState.SUSPENDED;
                     } else {
                         ret = PhoneConstants.DataState.CONNECTED;
@@ -317,15 +313,15 @@ public class CDMALTEPhone extends CDMAPhone {
 
     @Override
     protected void log(String s) {
-            Rlog.d(LOG_LTE_TAG, s);
+            Log.d(LOG_LTE_TAG, s);
     }
 
     protected void loge(String s) {
-            Rlog.e(LOG_LTE_TAG, s);
+            Log.e(LOG_LTE_TAG, s);
     }
 
     protected void loge(String s, Throwable e) {
-        Rlog.e(LOG_LTE_TAG, s, e);
+        Log.e(LOG_LTE_TAG, s, e);
 }
 
     @Override

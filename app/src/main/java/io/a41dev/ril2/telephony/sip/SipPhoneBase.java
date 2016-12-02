@@ -17,38 +17,35 @@
 package io.a41dev.ril2.telephony.sip;
 
 import android.content.Context;
-import android.net.LinkProperties;
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Registrant;
-import android.os.RegistrantList;
-import android.os.SystemProperties;
-import android.telephony.CellInfo;
 import android.telephony.CellLocation;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.CallStateException;
-import com.android.internal.telephony.Connection;
-import com.android.internal.telephony.dataconnection.DataConnection;
-import com.android.internal.telephony.IccCard;
-import com.android.internal.telephony.IccPhoneBookInterfaceManager;
-import com.android.internal.telephony.IccSmsInterfaceManager;
-import com.android.internal.telephony.MmiCode;
-import com.android.internal.telephony.OperatorInfo;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.PhoneNotifier;
-import com.android.internal.telephony.PhoneSubInfo;
-import com.android.internal.telephony.TelephonyProperties;
-import com.android.internal.telephony.UUSInfo;
-import com.android.internal.telephony.uicc.IccFileHandler;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.TelephonyProperties;
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.Call;
+import io.a41dev.ril2.telephony.CallStateException;
+import io.a41dev.ril2.telephony.Connection;
+import io.a41dev.ril2.telephony.IccCard;
+import io.a41dev.ril2.telephony.IccPhoneBookInterfaceManager;
+import io.a41dev.ril2.telephony.MmiCode;
+import io.a41dev.ril2.telephony.OperatorInfo;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.PhoneConstants;
+import io.a41dev.ril2.telephony.PhoneNotifier;
+import io.a41dev.ril2.telephony.PhoneSubInfo;
+import io.a41dev.ril2.telephony.Registrant;
+import io.a41dev.ril2.telephony.RegistrantList;
+import io.a41dev.ril2.telephony.UUSInfo;
+import io.a41dev.ril2.telephony.dataconnection.DataConnection;
+import io.a41dev.ril2.telephony.uicc.IccFileHandler;
 
 abstract class SipPhoneBase extends PhoneBase {
     private static final String LOG_TAG = "SipPhoneBase";
@@ -142,7 +139,7 @@ abstract class SipPhoneBase extends PhoneBase {
 
     @Override
     public SignalStrength getSignalStrength() {
-        return new SignalStrength();
+        return null;//new SignalStrength();
     }
 
     @Override
@@ -177,15 +174,13 @@ abstract class SipPhoneBase extends PhoneBase {
 
     /**
      * Notify any interested party of a Phone state change
-     * {@link com.android.internal.telephony.PhoneConstants.State}
      */
     /* package */ void notifyPhoneStateChanged() {
         mNotifier.notifyPhoneState(this);
     }
 
     /**
-     * Notify registrants of a change in the call state. This notifies changes in
-     * {@link com.android.internal.telephony.Call.State}. Use this when changes
+     * Notify registrants of a change in the call state. This notifies changes inUse this when changes
      * in the precise call state are needed, else use notifyPhoneStateChanged.
      */
     /* package */ void notifyPreciseCallStateChanged() {
@@ -220,17 +215,17 @@ abstract class SipPhoneBase extends PhoneBase {
 
     public boolean canDial() {
         int serviceState = getServiceState().getState();
-        Rlog.v(LOG_TAG, "canDial(): serviceState = " + serviceState);
+        Log.v(LOG_TAG, "canDial(): serviceState = " + serviceState);
         if (serviceState == ServiceState.STATE_POWER_OFF) return false;
 
         String disableCall = SystemProperties.get(
                 TelephonyProperties.PROPERTY_DISABLE_CALL, "false");
-        Rlog.v(LOG_TAG, "canDial(): disableCall = " + disableCall);
+        Log.v(LOG_TAG, "canDial(): disableCall = " + disableCall);
         if (disableCall.equals("true")) return false;
 
-        Rlog.v(LOG_TAG, "canDial(): ringingCall: " + getRingingCall().getState());
-        Rlog.v(LOG_TAG, "canDial(): foregndCall: " + getForegroundCall().getState());
-        Rlog.v(LOG_TAG, "canDial(): backgndCall: " + getBackgroundCall().getState());
+        Log.v(LOG_TAG, "canDial(): ringingCall: " + getRingingCall().getState());
+        Log.v(LOG_TAG, "canDial(): foregndCall: " + getForegroundCall().getState());
+        Log.v(LOG_TAG, "canDial(): backgndCall: " + getBackgroundCall().getState());
         return !getRingingCall().isRinging()
                 && (!getForegroundCall().getState().isAlive()
                     || !getBackgroundCall().getState().isAlive());
@@ -299,13 +294,13 @@ abstract class SipPhoneBase extends PhoneBase {
 
     @Override
     public String getEsn() {
-        Rlog.e(LOG_TAG, "[SipPhone] getEsn() is a CDMA method");
+        Log.e(LOG_TAG, "[SipPhone] getEsn() is a CDMA method");
         return "0";
     }
 
     @Override
     public String getMeid() {
-        Rlog.e(LOG_TAG, "[SipPhone] getMeid() is a CDMA method");
+        Log.e(LOG_TAG, "[SipPhone] getMeid() is a CDMA method");
         return "0";
     }
 
@@ -382,7 +377,7 @@ abstract class SipPhoneBase extends PhoneBase {
 
     @Override
     public void setCallWaiting(boolean enable, Message onComplete) {
-        Rlog.e(LOG_TAG, "call waiting not supported");
+        Log.e(LOG_TAG, "call waiting not supported");
     }
 
     @Override
@@ -483,17 +478,17 @@ abstract class SipPhoneBase extends PhoneBase {
 
     @Override
     public void activateCellBroadcastSms(int activate, Message response) {
-        Rlog.e(LOG_TAG, "Error! This functionality is not implemented for SIP.");
+        Log.e(LOG_TAG, "Error! This functionality is not implemented for SIP.");
     }
 
     @Override
     public void getCellBroadcastSmsConfig(Message response) {
-        Rlog.e(LOG_TAG, "Error! This functionality is not implemented for SIP.");
+        Log.e(LOG_TAG, "Error! This functionality is not implemented for SIP.");
     }
 
     @Override
     public void setCellBroadcastSmsConfig(int[] configValuesArray, Message response){
-        Rlog.e(LOG_TAG, "Error! This functionality is not implemented for SIP.");
+        Log.e(LOG_TAG, "Error! This functionality is not implemented for SIP.");
     }
 
     //@Override
@@ -504,11 +499,11 @@ abstract class SipPhoneBase extends PhoneBase {
     }
 
     //@Override
-    @Override
+   /* @Override
     public LinkProperties getLinkProperties(String apnType) {
         // FIXME: what's this for SIP?
         return null;
-    }
+    }*/
 
     void updatePhoneState() {
         PhoneConstants.State oldState = mState;
@@ -523,7 +518,7 @@ abstract class SipPhoneBase extends PhoneBase {
         }
 
         if (mState != oldState) {
-            Rlog.d(LOG_TAG, " ^^^ new phone state: " + mState);
+            Log.d(LOG_TAG, " ^^^ new phone state: " + mState);
             notifyPhoneStateChanged();
         }
     }

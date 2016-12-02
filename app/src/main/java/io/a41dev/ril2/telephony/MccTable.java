@@ -16,21 +16,18 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.app.ActivityManagerNative;
 import android.app.AlarmManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.net.wifi.WifiManager;
-import android.os.Build;
-import android.os.RemoteException;
-import android.os.SystemProperties;
 import android.text.TextUtils;
-import android.util.Slog;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Locale;
-import libcore.icu.TimeZoneNames;
+
+import io.a41dev.ril2.SystemProperties;
 
 /**
  * Mobile Country Code
@@ -105,7 +102,7 @@ public final class MccTable
             } else {
                 locale = new Locale(entry.mLanguage, entry.mIso);
             }
-            String[] tz = TimeZoneNames.forLocale(locale);
+            String[] tz = null;
             if (tz.length == 0) return null;
             return tz[0];
         }
@@ -182,11 +179,11 @@ public final class MccTable
                 mcc = Integer.parseInt(mccmnc.substring(0,3));
                 mnc = Integer.parseInt(mccmnc.substring(3));
             } catch (NumberFormatException e) {
-                Slog.e(LOG_TAG, "Error parsing IMSI");
+                Log.e(LOG_TAG, "Error parsing IMSI");
                 return;
             }
 
-            Slog.d(LOG_TAG, "updateMccMncConfiguration: mcc=" + mcc + ", mnc=" + mnc);
+            Log.d(LOG_TAG, "updateMccMncConfiguration: mcc=" + mcc + ", mnc=" + mnc);
 
             Locale locale = null;
             if (mcc != 0) {
@@ -197,26 +194,22 @@ public final class MccTable
                 setWifiCountryCodeFromMcc(context, mcc);
             } else {
                 // from SIM
-                try {
-                    Configuration config = new Configuration();
-                    boolean updateConfig = false;
-                    if (mcc != 0) {
-                        config.mcc = mcc;
-                        config.mnc = mnc == 0 ? Configuration.MNC_ZERO : mnc;
-                        updateConfig = true;
-                    }
-                    if (locale != null) {
-                        config.setLocale(locale);
-                        updateConfig = true;
-                    }
-                    if (updateConfig) {
-                        Slog.d(LOG_TAG, "updateMccMncConfiguration updateConfig config=" + config);
-                        ActivityManagerNative.getDefault().updateConfiguration(config);
-                    } else {
-                        Slog.d(LOG_TAG, "updateMccMncConfiguration nothing to update");
-                    }
-                } catch (RemoteException e) {
-                    Slog.e(LOG_TAG, "Can't update configuration", e);
+                Configuration config = new Configuration();
+                boolean updateConfig = false;
+                if (mcc != 0) {
+                    config.mcc = mcc;
+                    config.mnc = /*mnc == 0 ? Configuration.MNC_ZERO : */mnc;
+                    updateConfig = true;
+                }
+                if (locale != null) {
+                  /*  config.setLocale(locale);*/
+                    updateConfig = true;
+                }
+                if (updateConfig) {
+                    Log.d(LOG_TAG, "updateMccMncConfiguration updateConfig config=" + config);
+                 /*   ActivityManagerNative.getDefault().updateConfiguration(config);*/
+                } else {
+                    Log.d(LOG_TAG, "updateMccMncConfiguration nothing to update");
                 }
             }
         } else {
@@ -242,7 +235,7 @@ public final class MccTable
         String c = SystemProperties.get("persist.sys.country");
 
         if (null == language) {
-            Slog.d(LOG_TAG, "getLocaleForLanguageCountry: skipping no language");
+            Log.d(LOG_TAG, "getLocaleForLanguageCountry: skipping no language");
             return null; // no match possible
         }
         language = language.toLowerCase(Locale.ROOT);
@@ -253,7 +246,7 @@ public final class MccTable
 
         Locale locale;
         boolean alwaysPersist = false;
-        if (Build.IS_DEBUGGABLE) {
+        if (true) {
             alwaysPersist = SystemProperties.getBoolean("persist.always.persist.locale", false);
         }
         if (alwaysPersist || ((null == l || 0 == l.length()) && (null == c || 0 == c.length()))) {
@@ -277,20 +270,20 @@ public final class MccTable
                 if (null != bestMatch) {
                     locale = new Locale(bestMatch.substring(0,2),
                                                bestMatch.substring(3,5));
-                    Slog.d(LOG_TAG, "getLocaleForLanguageCountry: got match");
+                    Log.d(LOG_TAG, "getLocaleForLanguageCountry: got match");
                 } else {
                     locale = null;
-                    Slog.d(LOG_TAG, "getLocaleForLanguageCountry: skip no match");
+                    Log.d(LOG_TAG, "getLocaleForLanguageCountry: skip no match");
                 }
             } catch (Exception e) {
                 locale = null;
-                Slog.d(LOG_TAG, "getLocaleForLanguageCountry: exception", e);
+                Log.d(LOG_TAG, "getLocaleForLanguageCountry: exception", e);
             }
         } else {
             locale = null;
-            Slog.d(LOG_TAG, "getLocaleForLanguageCountry: skipping already persisted");
+            Log.d(LOG_TAG, "getLocaleForLanguageCountry: skipping already persisted");
         }
-        Slog.d(LOG_TAG, "getLocaleForLanguageCountry: X locale=" + locale);
+        Log.d(LOG_TAG, "getLocaleForLanguageCountry: X locale=" + locale);
         return locale;
     }
 
@@ -306,15 +299,11 @@ public final class MccTable
         Locale locale = getLocaleForLanguageCountry(context, language, country);
         if (locale != null) {
             Configuration config = new Configuration();
-            config.setLocale(locale);
-            Slog.d(LOG_TAG, "setSystemLocale: updateLocale config=" + config);
-            try {
-                ActivityManagerNative.getDefault().updateConfiguration(config);
-            } catch (RemoteException e) {
-                Slog.d(LOG_TAG, "setSystemLocale exception", e);
-            }
+            /*config.setLocale(locale);*/
+            Log.d(LOG_TAG, "setSystemLocale: updateLocale config=" + config);
+            /*   ActivityManagerNative.getDefault().updateConfiguration(config);*/
         } else {
-            Slog.d(LOG_TAG, "setSystemLocale: no locale");
+            Log.d(LOG_TAG, "setSystemLocale: no locale");
         }
     }
 
@@ -332,7 +321,7 @@ public final class MccTable
                 AlarmManager alarm =
                         (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
                 alarm.setTimeZone(zoneId);
-                Slog.d(LOG_TAG, "timezone set to "+zoneId);
+                Log.d(LOG_TAG, "timezone set to "+zoneId);
             }
         }
     }
@@ -348,7 +337,7 @@ public final class MccTable
         String language = MccTable.defaultLanguageForMcc(mcc);
         String country = MccTable.countryCodeForMcc(mcc);
 
-        Slog.d(LOG_TAG, "getLocaleFromMcc to " + language + "_" + country + " mcc=" + mcc);
+        Log.d(LOG_TAG, "getLocaleFromMcc to " + language + "_" + country + " mcc=" + mcc);
         return getLocaleForLanguageCountry(context, language, country);
     }
 
@@ -361,10 +350,10 @@ public final class MccTable
      */
     private static void setWifiCountryCodeFromMcc(Context context, int mcc) {
         String country = MccTable.countryCodeForMcc(mcc);
-        Slog.d(LOG_TAG, "WIFI_COUNTRY_CODE set to " + country);
+        Log.d(LOG_TAG, "WIFI_COUNTRY_CODE set to " + country);
         WifiManager wM = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
         //persist
-        wM.setCountryCode(country, true);
+      /*  wM.setCountryCode(country, true);*/
     }
 
     static {

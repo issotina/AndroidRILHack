@@ -16,10 +16,10 @@
 
 package io.a41dev.ril2.telephony;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import android.telephony.Rlog;
 
 /**
  * {@hide}
@@ -250,7 +250,7 @@ public abstract class Call {
             try {
                 hangup();
             } catch (CallStateException ex) {
-                Rlog.w(LOG_TAG, " hangupIfActive: caught " + ex);
+                Log.w(LOG_TAG, " hangupIfActive: caught " + ex);
             }
         }
     }

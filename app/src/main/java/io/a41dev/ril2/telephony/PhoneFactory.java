@@ -20,17 +20,12 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.net.LocalServerSocket;
 import android.os.Looper;
-import android.provider.Settings;
-import android.telephony.Rlog;
-import android.telephony.TelephonyManager;
+import android.util.Log;
 
-import com.android.internal.telephony.cdma.CDMALTEPhone;
-import com.android.internal.telephony.cdma.CDMAPhone;
-import com.android.internal.telephony.cdma.CdmaSubscriptionSourceManager;
-import com.android.internal.telephony.gsm.GSMPhone;
-import com.android.internal.telephony.sip.SipPhone;
-import com.android.internal.telephony.sip.SipPhoneFactory;
-import com.android.internal.telephony.uicc.UiccController;
+import io.a41dev.ril2.telephony.cdma.CdmaSubscriptionSourceManager;
+import io.a41dev.ril2.telephony.gsm.GSMPhone;
+import io.a41dev.ril2.telephony.sip.SipPhone;
+import io.a41dev.ril2.telephony.sip.SipPhoneFactory;
 
 /**
  * {@hide}
@@ -79,7 +74,7 @@ public class PhoneFactory {
                     try {
                         // use UNIX domain socket to
                         // prevent subsequent initialization
-                        new LocalServerSocket("com.android.internal.telephony");
+                        new LocalServerSocket("io.a41dev.ril2.telephony");
                     } catch (java.io.IOException ex) {
                         hasException = true;
                     }
@@ -100,42 +95,42 @@ public class PhoneFactory {
 
                 // Get preferred network mode
                 int preferredNetworkMode = RILConstants.PREFERRED_NETWORK_MODE;
-                if (TelephonyManager.getLteOnCdmaModeStatic() == PhoneConstants.LTE_ON_CDMA_TRUE) {
+               /* if (TelephonyManager.getLteOnCdmaModeStatic() == PhoneConstants.LTE_ON_CDMA_TRUE) {
                     preferredNetworkMode = Phone.NT_MODE_GLOBAL;
-                }
-                int networkMode = Settings.Global.getInt(context.getContentResolver(),
+                }*/
+               /* int networkMode = Settings.Global.getInt(context.getContentResolver(),
                         Settings.Global.PREFERRED_NETWORK_MODE, preferredNetworkMode);
-                Rlog.i(LOG_TAG, "Network Mode set to " + Integer.toString(networkMode));
+                Log.i(LOG_TAG, "Network Mode set to " + Integer.toString(networkMode));*/
 
                 int cdmaSubscription = CdmaSubscriptionSourceManager.getDefault(context);
-                Rlog.i(LOG_TAG, "Cdma Subscription set to " + cdmaSubscription);
+                Log.i(LOG_TAG, "Cdma Subscription set to " + cdmaSubscription);
 
                 //reads the system properties and makes commandsinterface
-                sCommandsInterface = new RIL(context, networkMode, cdmaSubscription);
+               /* sCommandsInterface = new RIL(context, networkMode, cdmaSubscription);
 
                 // Instantiate UiccController so that all other classes can just call getInstance()
                 UiccController.make(context, sCommandsInterface);
 
                 int phoneType = TelephonyManager.getPhoneType(networkMode);
                 if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
-                    Rlog.i(LOG_TAG, "Creating GSMPhone");
+                    Log.i(LOG_TAG, "Creating GSMPhone");
                     sProxyPhone = new PhoneProxy(new GSMPhone(context,
                             sCommandsInterface, sPhoneNotifier));
                 } else if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                     switch (TelephonyManager.getLteOnCdmaModeStatic()) {
                         case PhoneConstants.LTE_ON_CDMA_TRUE:
-                            Rlog.i(LOG_TAG, "Creating CDMALTEPhone");
+                            Log.i(LOG_TAG, "Creating CDMALTEPhone");
                             sProxyPhone = new PhoneProxy(new CDMALTEPhone(context,
                                 sCommandsInterface, sPhoneNotifier));
                             break;
                         case PhoneConstants.LTE_ON_CDMA_FALSE:
                         default:
-                            Rlog.i(LOG_TAG, "Creating CDMAPhone");
+                            Log.i(LOG_TAG, "Creating CDMAPhone");
                             sProxyPhone = new PhoneProxy(new CDMAPhone(context,
                                     sCommandsInterface, sPhoneNotifier));
                             break;
                     }
-                }
+                }*/
 
                 // Ensure that we have a default SMS app. Requesting the app with
                 // updateIfNeeded set to true is enough to configure a default SMS app.
@@ -145,7 +140,7 @@ public class PhoneFactory {
                 if (componentName != null) {
                     packageName = componentName.getPackageName();
                 }
-                Rlog.i(LOG_TAG, "defaultSmsApplication: " + packageName);
+                Log.i(LOG_TAG, "defaultSmsApplication: " + packageName);
 
                 // Set up monitor to watch for changes to SMS packages
                 SmsApplication.initSmsPackageMonitor(context);
@@ -168,9 +163,9 @@ public class PhoneFactory {
     }
 
     public static Phone getCdmaPhone() {
-        Phone phone;
+        Phone phone = null;
         synchronized(PhoneProxy.lockForRadioTechnologyChange) {
-            switch (TelephonyManager.getLteOnCdmaModeStatic()) {
+         /*   switch (TelephonyManager.getLteOnCdmaModeStatic()) {
                 case PhoneConstants.LTE_ON_CDMA_TRUE: {
                     phone = new CDMALTEPhone(sContext, sCommandsInterface, sPhoneNotifier);
                     break;
@@ -181,7 +176,7 @@ public class PhoneFactory {
                     phone = new CDMAPhone(sContext, sCommandsInterface, sPhoneNotifier);
                     break;
                 }
-            }
+            }*/
         }
         return phone;
     }

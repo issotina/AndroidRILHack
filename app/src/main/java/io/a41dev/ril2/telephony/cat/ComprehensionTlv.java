@@ -16,7 +16,7 @@
 
 package io.a41dev.ril2.telephony.cat;
 
-import android.telephony.Rlog;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,7 +125,7 @@ class ComprehensionTlv {
             case 0:
             case 0xff:
             case 0x80:
-                Rlog.d("CAT     ", "decode: unexpected first tag byte=" + Integer.toHexString(temp) +
+                Log.d("CAT     ", "decode: unexpected first tag byte=" + Integer.toHexString(temp) +
                         ", startIndex=" + startIndex + " curIndex=" + curIndex +
                         " endIndex=" + endIndex);
                 // Return null which will stop decoding, this has occurred

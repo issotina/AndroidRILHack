@@ -16,13 +16,13 @@
 
 package io.a41dev.ril2.telephony.gsm;
 
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.CallStateException;
-import com.android.internal.telephony.Connection;
-import com.android.internal.telephony.DriverCall;
-import com.android.internal.telephony.Phone;
-
 import java.util.List;
+
+import io.a41dev.ril2.telephony.Call;
+import io.a41dev.ril2.telephony.CallStateException;
+import io.a41dev.ril2.telephony.Connection;
+import io.a41dev.ril2.telephony.DriverCall;
+import io.a41dev.ril2.telephony.Phone;
 
 /**
  * {@hide}

@@ -18,9 +18,8 @@ package io.a41dev.ril2.telephony.cdma.sms;
 
 import android.util.SparseBooleanArray;
 
-import com.android.internal.telephony.SmsAddress;
-import com.android.internal.telephony.cdma.sms.UserData;
-import com.android.internal.util.HexDump;
+import io.a41dev.ril2.telephony.HexDump;
+import io.a41dev.ril2.telephony.SmsAddress;
 
 public class CdmaSmsAddress extends SmsAddress {
 

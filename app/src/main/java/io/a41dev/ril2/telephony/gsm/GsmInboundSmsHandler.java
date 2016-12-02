@@ -19,15 +19,15 @@ package io.a41dev.ril2.telephony.gsm;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Message;
-import android.provider.Telephony.Sms.Intents;
 
-import com.android.internal.telephony.CommandsInterface;
-import com.android.internal.telephony.InboundSmsHandler;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsMessageBase;
-import com.android.internal.telephony.SmsStorageMonitor;
-import com.android.internal.telephony.uicc.UsimServiceTable;
+import io.a41dev.ril2.telephony.CommandsInterface;
+import io.a41dev.ril2.telephony.InboundSmsHandler;
+import io.a41dev.ril2.telephony.PhoneBase;
+import io.a41dev.ril2.telephony.SmsConstants;
+import io.a41dev.ril2.telephony.SmsMessageBase;
+import io.a41dev.ril2.telephony.SmsStorageMonitor;
+import io.a41dev.ril2.telephony.Telephony;
+import io.a41dev.ril2.telephony.uicc.UsimServiceTable;
 
 /**
  * This class broadcasts incoming SMS messages to interested apps after storing them in
@@ -85,7 +85,7 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
      * are handled by {@link #dispatchNormalMessage} in parent class.
      *
      * @param smsb the SmsMessageBase object from the RIL
-     * @return a result code from {@link Intents},
+
      *  or {@link Activity#RESULT_OK} for delayed acknowledgment to SMSC
      */
     @Override
@@ -96,7 +96,7 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
             // As per 3GPP TS 23.040 9.2.3.9, Type Zero messages should not be
             // Displayed/Stored/Notified. They should only be acknowledged.
             log("Received short message type 0, Don't display or store it. Send Ack");
-            return Intents.RESULT_SMS_HANDLED;
+            return Telephony.Sms.Intents.RESULT_SMS_HANDLED;
         }
 
         // Send SMS-PP data download messages to UICC. See 3GPP TS 31.111 section 7.1.1.
@@ -116,14 +116,14 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
             if (DBG) log("Received voice mail indicator clear SMS shouldStore=" + !handled);
         }
         if (handled) {
-            return Intents.RESULT_SMS_HANDLED;
+            return Telephony.Sms.Intents.RESULT_SMS_HANDLED;
         }
 
         if (!mStorageMonitor.isStorageAvailable() &&
                 sms.getMessageClass() != SmsConstants.MessageClass.CLASS_0) {
             // It's a storable message and there's no storage available.  Bail.
             // (See TS 23.038 for a description of class 0 messages.)
-            return Intents.RESULT_SMS_OUT_OF_MEMORY;
+            return Telephony.Sms.Intents.RESULT_SMS_OUT_OF_MEMORY;
         }
 
         return dispatchNormalMessage(smsb);
@@ -164,12 +164,12 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
     private static int resultToCause(int rc) {
         switch (rc) {
             case Activity.RESULT_OK:
-            case Intents.RESULT_SMS_HANDLED:
+            case Telephony.Sms.Intents.RESULT_SMS_HANDLED:
                 // Cause code is ignored on success.
                 return 0;
-            case Intents.RESULT_SMS_OUT_OF_MEMORY:
+            case Telephony.Sms.Intents.RESULT_SMS_OUT_OF_MEMORY:
                 return CommandsInterface.GSM_SMS_FAIL_CAUSE_MEMORY_CAPACITY_EXCEEDED;
-            case Intents.RESULT_SMS_GENERIC_ERROR:
+            case Telephony.Sms.Intents.RESULT_SMS_GENERIC_ERROR:
             default:
                 return CommandsInterface.GSM_SMS_FAIL_CAUSE_UNSPECIFIED_ERROR;
         }

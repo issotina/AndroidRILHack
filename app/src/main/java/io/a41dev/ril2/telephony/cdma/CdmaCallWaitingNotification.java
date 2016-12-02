@@ -16,8 +16,8 @@
 
 package io.a41dev.ril2.telephony.cdma;
 
-import android.telephony.Rlog;
-import com.android.internal.telephony.PhoneConstants;
+import android.util.Log;
+import io.a41dev.ril2.telephony.PhoneConstants;
 
 /**
  * Represents a Supplementary Service Notification received from the network.
@@ -62,7 +62,7 @@ public class CdmaCallWaitingNotification {
             case 2: return PhoneConstants.PRESENTATION_UNKNOWN;
             default:
                 // This shouldn't happen, just log an error and treat as Unknown
-                Rlog.d(LOG_TAG, "Unexpected presentation " + cli);
+                Log.d(LOG_TAG, "Unexpected presentation " + cli);
                 return PhoneConstants.PRESENTATION_UNKNOWN;
         }
     }

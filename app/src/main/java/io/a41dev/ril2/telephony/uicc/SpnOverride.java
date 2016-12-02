@@ -16,20 +16,18 @@
 
 package io.a41dev.ril2.telephony.uicc;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
+import android.os.Environment;
+import android.util.Log;
+import android.util.Xml;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import android.os.Environment;
-import android.telephony.Rlog;
-import android.util.Xml;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.HashMap;
 
-import com.android.internal.util.XmlUtils;
 
 public class SpnOverride {
     private HashMap<String, String> mCarrierSpnMap;
@@ -60,7 +58,7 @@ public class SpnOverride {
         try {
             spnReader = new FileReader(spnFile);
         } catch (FileNotFoundException e) {
-            Rlog.w(LOG_TAG, "Can not open " +
+            Log.w(LOG_TAG, "Can not open " +
                     Environment.getRootDirectory() + "/" + PARTNER_SPN_OVERRIDE_PATH);
             return;
         }
@@ -69,10 +67,10 @@ public class SpnOverride {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(spnReader);
 
-            XmlUtils.beginDocument(parser, "spnOverrides");
+           // XmlUtils.beginDocument(parser, "spnOverrides");
 
             while (true) {
-                XmlUtils.nextElement(parser);
+                //XmlUtils.nextElement(parser);
 
                 String name = parser.getName();
                 if (!"spnOverride".equals(name)) {
@@ -85,9 +83,7 @@ public class SpnOverride {
                 mCarrierSpnMap.put(numeric, data);
             }
         } catch (XmlPullParserException e) {
-            Rlog.w(LOG_TAG, "Exception in spn-conf parser " + e);
-        } catch (IOException e) {
-            Rlog.w(LOG_TAG, "Exception in spn-conf parser " + e);
+            Log.w(LOG_TAG, "Exception in spn-conf parser " + e);
         }
     }
 

@@ -16,15 +16,14 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
-import android.os.SystemProperties;
 import android.text.TextUtils;
-import com.android.internal.telephony.CommandException;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+
+import io.a41dev.ril2.SystemProperties;
 
 
 /**

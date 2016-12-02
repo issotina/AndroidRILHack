@@ -16,10 +16,10 @@
 
 package io.a41dev.ril2.telephony;
 
-import android.telephony.Rlog;
+import android.util.Log;
 
-import com.android.internal.telephony.uicc.UiccController;
-import com.android.internal.telephony.uicc.IccCardProxy;
+import io.a41dev.ril2.telephony.uicc.UiccController;
+import io.a41dev.ril2.telephony.uicc.IccCardProxy;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -120,6 +120,6 @@ public class DebugService {
     }
 
     private static void log(String s) {
-        Rlog.d(TAG, "DebugService " + s);
+        Log.d(TAG, "DebugService " + s);
     }
 }

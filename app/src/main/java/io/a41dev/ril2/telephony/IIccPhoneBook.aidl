@@ -14,9 +14,9 @@
 ** limitations under the License.
 */
 
-package com.android.internal.telephony;
+package io.a41dev.ril2.telephony;
 
-import com.android.internal.telephony.uicc.AdnRecord;
+import io.a41dev.ril2.telephony.uicc.AdnRecord;
 
 
 

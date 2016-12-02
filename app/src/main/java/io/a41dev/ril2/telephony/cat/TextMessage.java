@@ -30,7 +30,7 @@ public class TextMessage implements Parcelable {
     public boolean userClear = false;
     public Duration duration = null;
 
-    TextMessage() {
+    public TextMessage() {
     }
 
     private TextMessage(Parcel in) {

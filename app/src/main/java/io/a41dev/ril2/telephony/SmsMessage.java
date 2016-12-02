@@ -17,15 +17,8 @@
 package io.a41dev.ril2.telephony;
 
 import android.os.Parcel;
-import android.telephony.Rlog;
+import android.util.Log;
 
-import com.android.internal.telephony.GsmAlphabet;
-import com.android.internal.telephony.GsmAlphabet.TextEncodingDetails;
-import com.android.internal.telephony.SmsConstants;
-import com.android.internal.telephony.SmsMessageBase;
-import com.android.internal.telephony.SmsMessageBase.SubmitPduBase;
-
-import java.lang.Math;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -34,7 +27,6 @@ import static android.telephony.TelephonyManager.PHONE_TYPE_CDMA;
 
 /**
  * A Short Message Service message.
- * @see android.provider.Telephony.Sms.Intents#getMessagesFromIntent
  */
 public class SmsMessage {
     private static final String LOG_TAG = "SmsMessage";
@@ -112,7 +104,7 @@ public class SmsMessage {
         /**
          * @hide
          */
-        protected SubmitPdu(SubmitPduBase spb) {
+        protected SubmitPdu(SmsMessageBase.SubmitPduBase spb) {
             this.encodedMessage = spb.encodedMessage;
             this.encodedScAddress = spb.encodedScAddress;
         }
@@ -140,7 +132,7 @@ public class SmsMessage {
 
         // cdma(3gpp2) vs gsm(3gpp) format info was not given,
         // guess from active voice phone type
-        int activePhone = TelephonyManager.getDefault().getCurrentPhoneType();
+        int activePhone = 1;
         String format = (PHONE_TYPE_CDMA == activePhone) ?
                 SmsConstants.FORMAT_3GPP2 : SmsConstants.FORMAT_3GPP;
         message = createFromPdu(pdu, format);
@@ -165,18 +157,18 @@ public class SmsMessage {
      * @hide pending API council approval
      */
     public static SmsMessage createFromPdu(byte[] pdu, String format) {
-        SmsMessageBase wrappedMessage;
+        SmsMessage wrappedMessage;
 
         if (SmsConstants.FORMAT_3GPP2.equals(format)) {
-            wrappedMessage = com.android.internal.telephony.cdma.SmsMessage.createFromPdu(pdu);
+            wrappedMessage = SmsMessage.createFromPdu(pdu);
         } else if (SmsConstants.FORMAT_3GPP.equals(format)) {
-            wrappedMessage = com.android.internal.telephony.gsm.SmsMessage.createFromPdu(pdu);
+            wrappedMessage = SmsMessage.createFromPdu(pdu);
         } else {
-            Rlog.e(LOG_TAG, "createFromPdu(): unsupported message format " + format);
+            Log.e(LOG_TAG, "createFromPdu(): unsupported message format " + format);
             return null;
         }
 
-        return new SmsMessage(wrappedMessage);
+        return null;
     }
 
     /**
@@ -190,19 +182,17 @@ public class SmsMessage {
      */
     public static SmsMessage newFromCMT(String[] lines) {
         // received SMS in 3GPP format
-        SmsMessageBase wrappedMessage =
-                com.android.internal.telephony.gsm.SmsMessage.newFromCMT(lines);
 
-        return new SmsMessage(wrappedMessage);
+        return new SmsMessage(null);
     }
 
     /** @hide */
     public static SmsMessage newFromParcel(Parcel p) {
         // received SMS in 3GPP2 format
-        SmsMessageBase wrappedMessage =
-                com.android.internal.telephony.cdma.SmsMessage.newFromParcel(p);
+        SmsMessage wrappedMessage =
+                SmsMessage.newFromParcel(p);
 
-        return new SmsMessage(wrappedMessage);
+      return null;
     }
 
     /**
@@ -217,16 +207,7 @@ public class SmsMessage {
      */
     public static SmsMessage createFromEfRecord(int index, byte[] data) {
         SmsMessageBase wrappedMessage;
-
-        if (isCdmaVoice()) {
-            wrappedMessage = com.android.internal.telephony.cdma.SmsMessage.createFromEfRecord(
-                    index, data);
-        } else {
-            wrappedMessage = com.android.internal.telephony.gsm.SmsMessage.createFromEfRecord(
-                    index, data);
-        }
-
-        return wrappedMessage != null ? new SmsMessage(wrappedMessage) : null;
+        return null;
     }
 
     /**
@@ -238,20 +219,14 @@ public class SmsMessage {
      */
     public static int getTPLayerLengthForPDU(String pdu) {
         if (isCdmaVoice()) {
-            return com.android.internal.telephony.cdma.SmsMessage.getTPLayerLengthForPDU(pdu);
-        } else {
-            return com.android.internal.telephony.gsm.SmsMessage.getTPLayerLengthForPDU(pdu);
+            return SmsMessage.getTPLayerLengthForPDU(pdu);
+        } else {SmsMessage.getTPLayerLengthForPDU(pdu);
         }
+
+        return 0;
     }
 
-    /*
-     * TODO(cleanup): It would make some sense if the result of
-     * preprocessing a message to determine the proper encoding (i.e.
-     * the resulting data structure from calculateLength) could be
-     * passed as an argument to the actual final encoding function.
-     * This would better ensure that the logic behind size calculation
-     * actually matched the encoding.
-     */
+
 
     /**
      * Calculates the number of SMS's required to encode the message body and
@@ -271,15 +246,8 @@ public class SmsMessage {
      */
     public static int[] calculateLength(CharSequence msgBody, boolean use7bitOnly) {
         // this function is for MO SMS
-        TextEncodingDetails ted = (useCdmaFormatForMoSms()) ?
-            com.android.internal.telephony.cdma.SmsMessage.calculateLength(msgBody, use7bitOnly) :
-            com.android.internal.telephony.gsm.SmsMessage.calculateLength(msgBody, use7bitOnly);
-        int ret[] = new int[4];
-        ret[0] = ted.msgCount;
-        ret[1] = ted.codeUnitCount;
-        ret[2] = ted.codeUnitsRemaining;
-        ret[3] = ted.codeUnitSize;
-        return ret;
+
+        return null;
     }
 
     /**
@@ -294,9 +262,9 @@ public class SmsMessage {
      */
     public static ArrayList<String> fragmentText(String text) {
         // This function is for MO SMS
-        TextEncodingDetails ted = (useCdmaFormatForMoSms()) ?
-            com.android.internal.telephony.cdma.SmsMessage.calculateLength(text, false) :
-            com.android.internal.telephony.gsm.SmsMessage.calculateLength(text, false);
+        /*GsmAlphabet.TextEncodingDetails ted = (useCdmaFormatForMoSms()) ?
+       SmsMessage.calculateLength(text, false) :
+    SmsMessage.calculateLength(text, false);
 
         // TODO(cleanup): The code here could be rolled into the logic
         // below cleanly if these MAX_* constants were defined more
@@ -348,14 +316,15 @@ public class SmsMessage {
                 nextPos = pos + Math.min(limit / 2, textLen - pos);
             }
             if ((nextPos <= pos) || (nextPos > textLen)) {
-                Rlog.e(LOG_TAG, "fragmentText failed (" + pos + " >= " + nextPos + " or " +
+                Log.e(LOG_TAG, "fragmentText failed (" + pos + " >= " + nextPos + " or " +
                           nextPos + " >= " + textLen + ")");
                 break;
             }
             result.add(text.substring(pos, nextPos));
             pos = nextPos;
         }
-        return result;
+        return result;*/
+        return new ArrayList<String>();
     }
 
     /**
@@ -406,20 +375,6 @@ public class SmsMessage {
      *         address, if applicable, and the encoded message.
      *         Returns null on encode error.
      */
-    public static SubmitPdu getSubmitPdu(String scAddress,
-            String destinationAddress, String message, boolean statusReportRequested) {
-        SubmitPduBase spb;
-
-        if (useCdmaFormatForMoSms()) {
-            spb = com.android.internal.telephony.cdma.SmsMessage.getSubmitPdu(scAddress,
-                    destinationAddress, message, statusReportRequested, null);
-        } else {
-            spb = com.android.internal.telephony.gsm.SmsMessage.getSubmitPdu(scAddress,
-                    destinationAddress, message, statusReportRequested);
-        }
-
-        return new SubmitPdu(spb);
-    }
 
     /**
      * Get an SMS-SUBMIT PDU for a data message to a destination address &amp; port.
@@ -437,13 +392,13 @@ public class SmsMessage {
     public static SubmitPdu getSubmitPdu(String scAddress,
             String destinationAddress, short destinationPort, byte[] data,
             boolean statusReportRequested) {
-        SubmitPduBase spb;
+        SmsMessageBase.SubmitPduBase spb = null;
 
         if (useCdmaFormatForMoSms()) {
-            spb = com.android.internal.telephony.cdma.SmsMessage.getSubmitPdu(scAddress,
+            SmsMessage.getSubmitPdu(scAddress,
                     destinationAddress, destinationPort, data, statusReportRequested);
         } else {
-            spb = com.android.internal.telephony.gsm.SmsMessage.getSubmitPdu(scAddress,
+            SmsMessage.getSubmitPdu(scAddress,
                     destinationAddress, destinationPort, data, statusReportRequested);
         }
 
@@ -717,7 +672,7 @@ public class SmsMessage {
      * @return true if current phone type is cdma, false otherwise.
      */
     private static boolean isCdmaVoice() {
-        int activePhone = TelephonyManager.getDefault().getCurrentPhoneType();
+        int activePhone = 1;
         return (PHONE_TYPE_CDMA == activePhone);
     }
 }

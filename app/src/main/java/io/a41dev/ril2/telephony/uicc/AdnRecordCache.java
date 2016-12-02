@@ -16,15 +16,15 @@
 
 package io.a41dev.ril2.telephony.uicc;
 
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.util.SparseArray;
 
-import com.android.internal.telephony.gsm.UsimPhoneBookManager;
-
 import java.util.ArrayList;
 import java.util.Iterator;
+
+import io.a41dev.ril2.telephony.AsyncResult;
+import io.a41dev.ril2.telephony.gsm.UsimPhoneBookManager;
 
 /**
  * {@hide}

@@ -20,12 +20,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
-import android.provider.Telephony.Sms.Intents;
-import android.telephony.Rlog;
+import android.util.Log;
 
 /**
  * Monitors the device and ICC storage, and sends the appropriate events.
@@ -79,8 +77,8 @@ public final class SmsStorageMonitor extends Handler {
         // Register for device storage intents.  Use these to notify the RIL
         // that storage for SMS is or is not available.
         IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_DEVICE_STORAGE_FULL);
-        filter.addAction(Intent.ACTION_DEVICE_STORAGE_NOT_FULL);
+       /* filter.addAction(Intent.ACTION_DEVICE_STORAGE_FULL);
+        filter.addAction(Intent.ACTION_DEVICE_STORAGE_NOT_FULL);*/
         mContext.registerReceiver(mResultReceiver, filter);
     }
 
@@ -107,7 +105,7 @@ public final class SmsStorageMonitor extends Handler {
                 ar = (AsyncResult) msg.obj;
                 if (ar.exception != null) {
                     mReportMemoryStatusPending = true;
-                    Rlog.v(TAG, "Memory status report to modem pending : mStorageAvailable = "
+                    Log.v(TAG, "Memory status report to modem pending : mStorageAvailable = "
                             + mStorageAvailable);
                 } else {
                     mReportMemoryStatusPending = false;
@@ -116,7 +114,7 @@ public final class SmsStorageMonitor extends Handler {
 
             case EVENT_RADIO_ON:
                 if (mReportMemoryStatusPending) {
-                    Rlog.v(TAG, "Sending pending memory status report : mStorageAvailable = "
+                    Log.v(TAG, "Sending pending memory status report : mStorageAvailable = "
                             + mStorageAvailable);
                     mCi.reportSmsMemoryStatus(mStorageAvailable,
                             obtainMessage(EVENT_REPORT_MEMORY_STATUS_DONE));
@@ -137,7 +135,7 @@ public final class SmsStorageMonitor extends Handler {
      */
     private void handleIccFull() {
         // broadcast SIM_FULL intent
-        Intent intent = new Intent(Intents.SIM_FULL_ACTION);
+        Intent intent = new Intent(Telephony.Sms.Intents.SIM_FULL_ACTION);
         mWakeLock.acquire(WAKE_LOCK_TIMEOUT);
         mContext.sendBroadcast(intent, android.Manifest.permission.RECEIVE_SMS);
     }
@@ -150,13 +148,7 @@ public final class SmsStorageMonitor extends Handler {
     private final BroadcastReceiver mResultReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_DEVICE_STORAGE_FULL)) {
-                mStorageAvailable = false;
-                mCi.reportSmsMemoryStatus(false, obtainMessage(EVENT_REPORT_MEMORY_STATUS_DONE));
-            } else if (intent.getAction().equals(Intent.ACTION_DEVICE_STORAGE_NOT_FULL)) {
-                mStorageAvailable = true;
-                mCi.reportSmsMemoryStatus(true, obtainMessage(EVENT_REPORT_MEMORY_STATUS_DONE));
-            }
+           
         }
     };
 }

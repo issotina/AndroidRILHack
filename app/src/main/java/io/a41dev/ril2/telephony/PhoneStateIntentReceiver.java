@@ -21,11 +21,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
-import android.os.Message;
 import android.telephony.ServiceState;
-import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.telephony.Rlog;
 
 /**
  *
@@ -46,7 +43,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
 
     PhoneConstants.State mPhoneState = PhoneConstants.State.IDLE;
     ServiceState mServiceState = new ServiceState();
-    SignalStrength mSignalStrength = new SignalStrength();
+/*    SignalStrength mSignalStrength = new SignalStrength();*/
 
     private Context mContext;
     private Handler mTarget;
@@ -102,7 +99,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
             throw new RuntimeException
                 ("client must call notifySignalStrength(int)");
         }
-        return mSignalStrength.getAsuLevel();
+        return/* mSignalStrength.getAsuLevel()*/0;
     }
 
     /**
@@ -117,7 +114,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
             throw new RuntimeException
                 ("client must call notifySignalStrength(int)");
         }
-        return mSignalStrength.getDbm();
+        return /*mSignalStrength.getDbm()*/0;
     }
 
     public void notifyPhoneCallState(int eventWhat) {
@@ -133,7 +130,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
     public void notifyServiceState(int eventWhat) {
         mWants |= NOTIF_SERVICE;
         mServiceStateEventWhat = eventWhat;
-        mFilter.addAction(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED);
+       /* mFilter.addAction(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED);*/
     }
 
     public boolean getNotifyServiceState() {
@@ -143,7 +140,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
     public void notifySignalStrength (int eventWhat) {
         mWants |= NOTIF_SIGNAL;
         mAsuEventWhat = eventWhat;
-        mFilter.addAction(TelephonyIntents.ACTION_SIGNAL_STRENGTH_CHANGED);
+    /*    mFilter.addAction(TelephonyIntents.ACTION_SIGNAL_STRENGTH_CHANGED);*/
     }
 
     public boolean getNotifySignalStrength() {
@@ -162,7 +159,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
-        try {
+        /*try {
             if (TelephonyIntents.ACTION_SIGNAL_STRENGTH_CHANGED.equals(action)) {
                 mSignalStrength = SignalStrength.newFromBundle(intent.getExtras());
 
@@ -171,7 +168,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
                     mTarget.sendMessage(message);
                 }
             } else if (TelephonyManager.ACTION_PHONE_STATE_CHANGED.equals(action)) {
-                if (DBG) Rlog.d(LOG_TAG, "onReceiveIntent: ACTION_PHONE_STATE_CHANGED, state="
+                if (DBG) Log.d(LOG_TAG, "onReceiveIntent: ACTION_PHONE_STATE_CHANGED, state="
                                + intent.getStringExtra(PhoneConstants.STATE_KEY));
                 String phoneState = intent.getStringExtra(PhoneConstants.STATE_KEY);
                 mPhoneState = Enum.valueOf(
@@ -192,9 +189,9 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
                 }
             }
         } catch (Exception ex) {
-            Rlog.e(LOG_TAG, "[PhoneStateIntentRecv] caught " + ex);
+            Log.e(LOG_TAG, "[PhoneStateIntentRecv] caught " + ex);
             ex.printStackTrace();
-        }
+        }*/
     }
 
 }

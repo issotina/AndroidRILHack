@@ -240,7 +240,7 @@ public class UiccCard {
             Resources r = Resources.getSystem();
 
             String title = (isAdded) ? "Added Title" :
-                r.getString(R.string.sim_removed_title);
+               "";
             String message = (isAdded) ? r.getString(R.string.sim_added_message) :
                 r.getString(R.string.sim_removed_message);
             String buttonTxt = r.getString(R.string.sim_restart_button);

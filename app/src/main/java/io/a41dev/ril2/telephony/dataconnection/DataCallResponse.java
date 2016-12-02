@@ -17,18 +17,14 @@
 
 package io.a41dev.ril2.telephony.dataconnection;
 
-import android.net.LinkAddress;
-import android.net.LinkProperties;
-import android.net.NetworkUtils;
-import android.net.RouteInfo;
-import android.os.SystemProperties;
-import android.telephony.Rlog;
-
-import com.android.internal.telephony.dataconnection.DcFailCause;
+import android.util.Log;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
+import io.a41dev.ril2.SystemProperties;
+import io.a41dev.ril2.telephony.sip.LinkProperties;
 
 /**
  * This is RIL_Data_Call_Response_v5 from ril.h
@@ -127,7 +123,7 @@ public class DataCallResponse {
                     for (String addr : addresses) {
                         addr = addr.trim();
                         if (addr.isEmpty()) continue;
-                        LinkAddress la;
+                  /*      LinkAddress la;*/
                         int addrPrefixLen;
 
                         String [] ap = addr.split("/");
@@ -139,18 +135,18 @@ public class DataCallResponse {
                         }
                         InetAddress ia;
                         try {
-                            ia = NetworkUtils.numericToInetAddress(addr);
+                            /*ia = NetworkUtils.numericToInetAddress(addr);*/
                         } catch (IllegalArgumentException e) {
                             throw new UnknownHostException("Non-numeric ip addr=" + addr);
                         }
-                        if (! ia.isAnyLocalAddress()) {
+                        if (false) {
                             if (addrPrefixLen == 0) {
                                 // Assume point to point
                                 addrPrefixLen = (ia instanceof Inet4Address) ? 32 : 128;
                             }
-                            if (DBG) Rlog.d(LOG_TAG, "addr/pl=" + addr + "/" + addrPrefixLen);
-                            la = new LinkAddress(ia, addrPrefixLen);
-                            linkProperties.addLinkAddress(la);
+                            if (DBG) Log.d(LOG_TAG, "addr/pl=" + addr + "/" + addrPrefixLen);
+                         /*   la = new LinkAddress(ia, addrPrefixLen);
+                            linkProperties.addLinkAddress(la);*/
                         }
                     }
                 } else {
@@ -164,13 +160,13 @@ public class DataCallResponse {
                         if (addr.isEmpty()) continue;
                         InetAddress ia;
                         try {
-                            ia = NetworkUtils.numericToInetAddress(addr);
+                          /*  ia = NetworkUtils.numericToInetAddress(addr);*/
                         } catch (IllegalArgumentException e) {
                             throw new UnknownHostException("Non-numeric dns addr=" + addr);
                         }
-                        if (! ia.isAnyLocalAddress()) {
+                       /* if (! ia.isAnyLocalAddress()) {
                             linkProperties.addDns(ia);
-                        }
+                        }*/
                     }
                 } else if (okToUseSystemPropertyDns){
                     String dnsServers[] = new String[2];
@@ -181,13 +177,13 @@ public class DataCallResponse {
                         if (dnsAddr.isEmpty()) continue;
                         InetAddress ia;
                         try {
-                            ia = NetworkUtils.numericToInetAddress(dnsAddr);
+                          /*  ia = NetworkUtils.numericToInetAddress(dnsAddr);*/
                         } catch (IllegalArgumentException e) {
                             throw new UnknownHostException("Non-numeric dns addr=" + dnsAddr);
                         }
-                        if (! ia.isAnyLocalAddress()) {
-                            linkProperties.addDns(ia);
-                        }
+                        /*if (! ia.isAnyLocalAddress()) {
+                          *//*  linkProperties.addDns(ia);*//*
+                        }*/
                     }
                 } else {
                     throw new UnknownHostException("Empty dns response and no system default dns");
@@ -207,17 +203,17 @@ public class DataCallResponse {
                     if (addr.isEmpty()) continue;
                     InetAddress ia;
                     try {
-                        ia = NetworkUtils.numericToInetAddress(addr);
+                       /* ia = NetworkUtils.numericToInetAddress(addr);*/
                     } catch (IllegalArgumentException e) {
                         throw new UnknownHostException("Non-numeric gateway addr=" + addr);
                     }
                     // Allow 0.0.0.0 or :: as a gateway; this indicates a point-to-point interface.
-                    linkProperties.addRoute(new RouteInfo(ia));
+                 /*   linkProperties.addRoute(new RouteInfo(ia));*/
                 }
 
                 result = SetupResult.SUCCESS;
             } catch (UnknownHostException e) {
-                Rlog.d(LOG_TAG, "setLinkProperties: UnknownHostException " + e);
+                Log.d(LOG_TAG, "setLinkProperties: UnknownHostException " + e);
                 e.printStackTrace();
                 result = SetupResult.ERR_UnacceptableParameter;
             }
@@ -232,7 +228,7 @@ public class DataCallResponse {
         // An error occurred so clear properties
         if (result != SetupResult.SUCCESS) {
             if(DBG) {
-                Rlog.d(LOG_TAG, "setLinkProperties: error clearing LinkProperties " +
+                Log.d(LOG_TAG, "setLinkProperties: error clearing LinkProperties " +
                         "status=" + status + " result=" + result);
             }
             linkProperties.clear();
